@@ -32,7 +32,10 @@ import {
   Cpu,
   Feather,
   ChevronRight,
-  Wind
+  Wind,
+  Music,
+  ListMusic,
+  Send
 } from "lucide-react";
 
 export default function Home() {
@@ -42,7 +45,7 @@ export default function Home() {
   const [currentRoomKey, setCurrentRoomKey] = useState("bedroom");
   const [isRoomDropdownOpen, setIsRoomDropdownOpen] = useState(false);
   const [isRightDrawerOpen, setIsRightDrawerOpen] = useState(false);
-  const [drawerTab, setDrawerTab] = useState<"chat" | "owls">("chat");
+  const [drawerTab, setDrawerTab] = useState<"chat" | "owls" | "suggestions">("chat");
   const [isDrawerNotifEnabled, setIsDrawerNotifEnabled] = useState(true);
   const [isRainAudioMuted, setIsRainAudioMuted] = useState(false);
   const [isRadioPlaying, setIsRadioPlaying] = useState(false);
@@ -55,6 +58,7 @@ export default function Home() {
   const [isLightsModalOpen, setIsLightsModalOpen] = useState(false);
   const [isMixerModalOpen, setIsMixerModalOpen] = useState(false);
   const [isGeneratorOverlayOpen, setIsGeneratorOverlayOpen] = useState(false);
+  const [isSuggestSongModalOpen, setIsSuggestSongModalOpen] = useState(false);
 
   // Custom inputs
   const [customRoomTitle, setCustomRoomTitle] = useState("");
@@ -63,6 +67,14 @@ export default function Home() {
   const [chatCity, setChatCity] = useState("");
   const [chatMessage, setChatMessage] = useState("");
   const [thoughtText, setThoughtText] = useState("");
+
+  // Song Suggestion Inputs
+  const [suggestTitle, setSuggestTitle] = useState("");
+  const [suggestArtist, setSuggestArtist] = useState("");
+  const [suggestName, setSuggestName] = useState("");
+  const [suggestCity, setSuggestCity] = useState("");
+  const [suggestNote, setSuggestNote] = useState("");
+  const [suggestedSongsList, setSuggestedSongsList] = useState<any[]>([]);
 
   // Sound Mix Sliders
   const [rainVolumePct, setRainVolumePct] = useState(70);
@@ -92,7 +104,10 @@ export default function Home() {
   // Toast message
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Rooms metadata
+  // Audio Player Ref for Real Custom MP3 Playback
+  const htmlAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Rooms metadata & custom MP3 audio URLs
   const [rooms, setRooms] = useState<Record<string, any>>({
     bedroom: {
       name: "🌙 3:17 AM BEDROOM (NIGHT OWL)",
@@ -101,7 +116,8 @@ export default function Home() {
       imgIdx: 0,
       hasCRT: false,
       trackTitle: "After Dark",
-      trackArtist: "Mr.Kitty · Midnight Mix"
+      trackArtist: "Mr.Kitty · Midnight Mix",
+      audioUrl: "/music/after_dark.mp3"
     },
     drive: {
       name: "🚗 NIGHT DRIVE",
@@ -110,7 +126,8 @@ export default function Home() {
       imgIdx: 1,
       hasCRT: false,
       trackTitle: "Midnight City",
-      trackArtist: "M83 · Night Highway Synth"
+      trackArtist: "M83 · Night Highway Synth",
+      audioUrl: "/music/midnight_city.mp3"
     },
     cafe: {
       name: "☕ 1:30 PM AFTERNOON BRAIN DRAIN",
@@ -119,7 +136,8 @@ export default function Home() {
       imgIdx: 3,
       hasCRT: false,
       trackTitle: "Cold Espresso Jazz",
-      trackArtist: "3:17 AM Lounge Band"
+      trackArtist: "3:17 AM Lounge Band",
+      audioUrl: "/music/cold_espresso.mp3"
     },
     study: {
       name: "📚 8:00 AM MORNING COFFEE",
@@ -128,7 +146,8 @@ export default function Home() {
       imgIdx: 2,
       hasCRT: true,
       trackTitle: "2:48 AM Focus Beats",
-      trackArtist: "Lo-Fi Study Tape"
+      trackArtist: "Lo-Fi Study Tape",
+      audioUrl: "/music/study_beats.mp3"
     },
     city: {
       name: "🌆 7:15 PM EVENING COMMUTE",
@@ -137,7 +156,8 @@ export default function Home() {
       imgIdx: 4,
       hasCRT: false,
       trackTitle: "Space Song",
-      trackArtist: "Beach House · Skyline Mix"
+      trackArtist: "Beach House · Skyline Mix",
+      audioUrl: "/music/space_song.mp3"
     },
     escape: {
       name: "🌊 MIDNIGHT ESCAPE",
@@ -146,7 +166,8 @@ export default function Home() {
       imgIdx: 6,
       hasCRT: false,
       trackTitle: "Ocean Resonance",
-      trackArtist: "HOME · Ambient Waves"
+      trackArtist: "HOME · Ambient Waves",
+      audioUrl: "/music/ocean_waves.mp3"
     }
   });
 
@@ -206,7 +227,23 @@ export default function Home() {
 
   const spotCurrentStageRef = useRef<Record<string, number>>({});
 
-  // 1. Clock Engine
+  // 1. Fetch Suggestions from Database / API Route
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      try {
+        const res = await fetch("/api/suggest-song");
+        const data = await res.json();
+        if (data.success && data.suggestions) {
+          setSuggestedSongsList(data.suggestions);
+        }
+      } catch (err) {
+        console.log("Could not fetch song suggestions:", err);
+      }
+    };
+    fetchSuggestions();
+  }, []);
+
+  // 2. Clock Engine
   useEffect(() => {
     const updateClock = () => {
       const now = new Date();
@@ -235,7 +272,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  // 2. Power Degradation Engine (1% drop every 10 mins)
+  // 3. Power Degradation Engine (1% drop every 10 mins)
   useEffect(() => {
     const interval = setInterval(() => {
       setPowerLevel((prev) => Math.max(20, prev - 1));
@@ -243,7 +280,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  // 3. Floating Presence Toast Loop
+  // 4. Floating Presence Toast Loop
   useEffect(() => {
     if (!isDrawerNotifEnabled) return;
     const events = [
@@ -264,7 +301,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [isDrawerNotifEnabled]);
 
-  // 4. Web Audio API Engine
+  // 5. Web Audio API Engine
   const initAudioEngine = () => {
     if (audioCtxRef.current) {
       if (audioCtxRef.current.state === "suspended") {
@@ -367,9 +404,17 @@ export default function Home() {
 
     const nextState = play !== undefined ? play : !isRadioPlaying;
     setIsRadioPlaying(nextState);
+
+    if (htmlAudioRef.current) {
+      if (nextState) {
+        htmlAudioRef.current.play().catch(() => {});
+      } else {
+        htmlAudioRef.current.pause();
+      }
+    }
   };
 
-  // 5. Canvas Rain & Particles
+  // 6. Canvas Rain & Particles
   useEffect(() => {
     const canvas = rainCanvasRef.current;
     if (!canvas) return;
@@ -498,6 +543,45 @@ export default function Home() {
     }
   };
 
+  // Submit Song Suggestion to Database API
+  const handleSuggestSongSubmit = async () => {
+    if (!suggestTitle.trim()) {
+      showToast("Please enter a song title 🎵");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/suggest-song", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          songTitle: suggestTitle,
+          artist: suggestArtist,
+          suggestedBy: suggestName,
+          city: suggestCity,
+          note: suggestNote
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setIsSuggestSongModalOpen(false);
+        setSuggestTitle("");
+        setSuggestArtist("");
+        setSuggestNote("");
+
+        if (data.suggestion) {
+          setSuggestedSongsList((prev) => [data.suggestion, ...prev]);
+        }
+
+        showToast("🎵 Song suggestion sent to host database!");
+      }
+    } catch (err) {
+      showToast("Submitted suggestion!");
+      setIsSuggestSongModalOpen(false);
+    }
+  };
+
   // Generator Payment Explosion
   const handlePayGenerator = () => {
     setIsLightsModalOpen(false);
@@ -564,6 +648,9 @@ export default function Home() {
 
   return (
     <div className="fixed inset-0 w-full h-full bg-[#05070d] text-slate-100 font-sans overflow-hidden select-none">
+      {/* HTML5 Audio Element for Real Custom MP3 Playback */}
+      <audio ref={htmlAudioRef} src={currentRoom.audioUrl} loop />
+
       {/* LAYER 0 & 1: DYNAMIC ROOM ENVIRONMENT & SLIDESHOW */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <div
@@ -668,6 +755,14 @@ export default function Home() {
           {/* Right Controls */}
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setIsSuggestSongModalOpen(true)}
+              className="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-xs font-mono text-amber-200 transition active:scale-95 shadow-md"
+            >
+              <Music className="w-3.5 h-3.5 text-amber-300" />
+              <span>Suggest a Song 🎵</span>
+            </button>
+
+            <button
               onClick={() => toggleRainAudio()}
               className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/40 text-xs font-mono text-sky-200 transition active:scale-95 shadow-md"
             >
@@ -689,17 +784,6 @@ export default function Home() {
               className="cursor-pointer p-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 text-slate-300 hover:text-white transition active:scale-95"
             >
               <Sliders className="w-4 h-4" />
-            </button>
-
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(window.location.href);
-                showToast("link copied! send to another night owl 🌙");
-              }}
-              className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/30 text-xs font-mono text-indigo-200 transition active:scale-95"
-            >
-              <Moon className="w-3.5 h-3.5 text-indigo-300" />
-              <span className="hidden sm:inline">share room</span>
             </button>
           </div>
         </header>
@@ -862,7 +946,7 @@ export default function Home() {
         </footer>
       </main>
 
-      {/* RIGHT SLIDE DRAWER */}
+      {/* RIGHT SLIDE DRAWER WITH CHAT / OWLS / SUGGESTIONS */}
       <div className={`fixed inset-y-0 right-0 z-50 w-full max-w-md bg-[#0a0d18]/95 border-l border-amber-500/30 backdrop-blur-2xl shadow-2xl p-6 flex flex-col justify-between transform transition-transform duration-300 ease-in-out ${isRightDrawerOpen ? "translate-x-0" : "translate-x-full"}`}>
         <div className="flex flex-col h-full overflow-hidden">
           <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4 shrink-0">
@@ -886,22 +970,28 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="flex rounded-2xl bg-white/5 p-1 border border-white/10 mb-4 shrink-0">
+          <div className="flex rounded-2xl bg-white/5 p-1 border border-white/10 mb-4 shrink-0 gap-1">
             <button
               onClick={() => setDrawerTab("chat")}
               className={`flex-1 py-2 rounded-xl text-xs font-mono font-semibold transition ${drawerTab === "chat" ? "text-amber-200 bg-amber-500/20" : "text-slate-400 hover:text-white"}`}
             >
-              💬 Live Room Chat
+              💬 Live Chat
             </button>
             <button
               onClick={() => setDrawerTab("owls")}
               className={`flex-1 py-2 rounded-xl text-xs font-mono font-semibold transition ${drawerTab === "owls" ? "text-amber-200 bg-amber-500/20" : "text-slate-400 hover:text-white"}`}
             >
-              👥 Who's Listening ({owlsList.length})
+              👥 Owls ({owlsList.length})
+            </button>
+            <button
+              onClick={() => setDrawerTab("suggestions")}
+              className={`flex-1 py-2 rounded-xl text-xs font-mono font-semibold transition ${drawerTab === "suggestions" ? "text-amber-200 bg-amber-500/20" : "text-slate-400 hover:text-white"}`}
+            >
+              🎵 Suggested
             </button>
           </div>
 
-          {drawerTab === "chat" ? (
+          {drawerTab === "chat" && (
             <div className="space-y-3 overflow-y-auto shrink grow pr-1">
               {chatList.map((item, idx) => (
                 <div key={idx} className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1">
@@ -913,7 +1003,9 @@ export default function Home() {
                 </div>
               ))}
             </div>
-          ) : (
+          )}
+
+          {drawerTab === "owls" && (
             <div className="space-y-2 overflow-y-auto shrink grow pr-1">
               {owlsList.map((owl, idx) => (
                 <div key={idx} className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
@@ -927,6 +1019,31 @@ export default function Home() {
                     </div>
                   </div>
                   <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {drawerTab === "suggestions" && (
+            <div className="space-y-3 overflow-y-auto shrink grow pr-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono text-amber-300 font-bold">Listener Suggested Songs</span>
+                <button
+                  onClick={() => setIsSuggestSongModalOpen(true)}
+                  className="px-2.5 py-1 rounded-full bg-amber-500/20 text-[10px] font-mono text-amber-200 border border-amber-500/40 hover:bg-amber-500/30"
+                >
+                  + Suggest Song
+                </button>
+              </div>
+
+              {suggestedSongsList.map((s, idx) => (
+                <div key={idx} className="p-3.5 rounded-2xl bg-white/5 border border-amber-500/20 space-y-1">
+                  <div className="flex items-center justify-between text-xs font-mono">
+                    <span className="text-amber-300 font-bold">🎵 {s.songTitle}</span>
+                    <span className="text-[10px] text-slate-400">{s.artist}</span>
+                  </div>
+                  <div className="text-[10px] text-slate-400">Suggested by {s.suggestedBy} ({s.city})</div>
+                  {s.note && <p className="text-xs text-slate-300 italic">"{s.note}"</p>}
                 </div>
               ))}
             </div>
@@ -969,6 +1086,74 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* MODAL: SUGGEST A SONG */}
+      {isSuggestSongModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#05070d]/90 backdrop-blur-xl p-4">
+          <div className="w-full max-w-sm rounded-3xl bg-gradient-to-b from-slate-900/95 to-[#0a0d18] border border-amber-500/40 p-6 shadow-2xl space-y-4 relative">
+            <button onClick={() => setIsSuggestSongModalOpen(false)} className="cursor-pointer absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-mono">
+                <Music className="w-3.5 h-3.5" />
+                <span>Listener Recommendation</span>
+              </div>
+              <h3 className="font-mono text-lg font-bold text-white">What song should be added next?</h3>
+              <p className="text-xs text-slate-400">Tell the host which song to add to 3:17 AM!</p>
+            </div>
+
+            <div className="space-y-3">
+              <input
+                type="text"
+                value={suggestTitle}
+                onChange={(e) => setSuggestTitle(e.target.value)}
+                placeholder="Song Title (e.g. Frank Ocean — Nights)..."
+                className="w-full p-3 rounded-2xl bg-white/5 border border-amber-500/20 text-sm text-slate-100 font-sans focus:outline-none focus:border-amber-400/60"
+              />
+              <input
+                type="text"
+                value={suggestArtist}
+                onChange={(e) => setSuggestArtist(e.target.value)}
+                placeholder="Artist or Spotify/YouTube Link..."
+                className="w-full p-3 rounded-2xl bg-white/5 border border-amber-500/20 text-sm text-slate-100 font-sans focus:outline-none focus:border-amber-400/60"
+              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={suggestName}
+                  onChange={(e) => setSuggestName(e.target.value)}
+                  placeholder="Your Name (optional)..."
+                  className="w-1/2 p-2.5 rounded-2xl bg-white/5 border border-amber-500/20 text-xs text-slate-100 font-mono focus:outline-none focus:border-amber-400/60"
+                />
+                <input
+                  type="text"
+                  value={suggestCity}
+                  onChange={(e) => setSuggestCity(e.target.value)}
+                  placeholder="City (optional)..."
+                  className="w-1/2 p-2.5 rounded-2xl bg-white/5 border border-amber-500/20 text-xs text-slate-100 font-mono focus:outline-none focus:border-amber-400/60"
+                />
+              </div>
+              <textarea
+                rows={2}
+                value={suggestNote}
+                onChange={(e) => setSuggestNote(e.target.value)}
+                placeholder="Why this song? (optional note)..."
+                className="w-full p-3 rounded-2xl bg-white/5 border border-amber-500/20 text-xs text-slate-100 font-sans resize-none"
+              />
+            </div>
+
+            <button
+              onClick={handleSuggestSongSubmit}
+              className="cursor-pointer w-full py-3 rounded-full bg-amber-500 hover:bg-amber-400 text-xs font-mono text-slate-950 font-bold transition active:scale-95 shadow-lg flex items-center justify-center gap-2"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>Submit Song Suggestion 🎵</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* MODAL: CUSTOM ROOM */}
       {isCustomRoomModalOpen && (
