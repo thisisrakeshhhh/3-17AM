@@ -53,7 +53,7 @@ export default function Home() {
   
   // Audio & Power States
   const [isDrawerNotifEnabled, setIsDrawerNotifEnabled] = useState(true);
-  const [isRainAudioMuted, setIsRainAudioMuted] = useState(false);
+  const [isRainAudioMuted, setIsRainAudioMuted] = useState(true);
   const [isRadioPlaying, setIsRadioPlaying] = useState(false);
   const [powerLevel, setPowerLevel] = useState(60);
   const [likedTracks, setLikedTracks] = useState<string[]>([]);
@@ -499,7 +499,6 @@ export default function Home() {
   const handleEnterApp = () => {
     setIsEntered(true);
     initAudioEngine();
-    toggleRadioPlayback(true);
   };
 
   // Hotspot Click Multi-stage Dialogue
