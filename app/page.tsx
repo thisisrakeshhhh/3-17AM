@@ -1042,7 +1042,7 @@ export default function Home() {
                 <span>dispatched via Groq night stream</span>
               </div>
               <h3 className="font-mono text-lg font-bold text-white tracking-wide">what's on your mind?</h3>
-              <p class="text-xs text-slate-400 font-sans">don't worry. nobody knows it's you. 🌙</p>
+              <p className="text-xs text-slate-400 font-sans">don't worry. nobody knows it's you. 🌙</p>
             </div>
 
             <textarea
