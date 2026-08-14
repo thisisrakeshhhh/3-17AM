@@ -1,0 +1,258 @@
+/* ==========================================
+   3:17 AM — DIGITAL NIGHT ENVIRONMENT STYLESHEET
+========================================== */
+
+@layer utilities {
+    .bg-radial-lamp {
+        background: radial-gradient(circle at 50% 40%, rgba(255, 183, 77, 0.28) 0%, rgba(13, 14, 30, 0.45) 60%, rgba(5, 7, 13, 0.95) 100%);
+    }
+}
+
+/* Custom scrollbars hidden */
+::-webkit-scrollbar {
+    display: none;
+}
+
+/* Ensure cursor pointer on all interactive elements */
+button, a, input, select, textarea, .hotspot, .mood-btn, .pay-option {
+    cursor: pointer !important;
+}
+
+/* ==========================================
+   CUSTOM STAR / GLOW CURSOR (NEVER BLOCK CLICKS)
+========================================== */
+#customCursor {
+    pointer-events: none !important;
+    transition: transform 0.06s ease-out, opacity 0.2s ease;
+}
+
+/* KEN BURNS SLOW PAN & ZOOM ANIMATION FOR BACKGROUND IMAGES */
+@keyframes kenBurns {
+    0% { transform: scale(1) translate(0, 0); }
+    50% { transform: scale(1.06) translate(-1.5%, -1%); }
+    100% { transform: scale(1) translate(0, 0); }
+}
+
+.animate-kenburns {
+    animation: kenBurns 20s infinite ease-in-out alternate;
+}
+
+/* SCREEN FLICKER GLOW FOR LAPTOP / TV */
+@keyframes flickerGlow {
+    0%, 100% { opacity: 0.9; box-shadow: 0 0 15px rgba(168, 85, 247, 0.4); }
+    25% { opacity: 1; box-shadow: 0 0 25px rgba(168, 85, 247, 0.7); }
+    50% { opacity: 0.85; box-shadow: 0 0 10px rgba(168, 85, 247, 0.3); }
+    75% { opacity: 0.95; box-shadow: 0 0 20px rgba(168, 85, 247, 0.6); }
+}
+
+.animate-flicker {
+    animation: flickerGlow 3.5s infinite ease-in-out;
+}
+
+/* BREATHING LAMP GLOW ANIMATION */
+@keyframes lampPulse {
+    0%, 100% { opacity: 0.35; }
+    50% { opacity: 0.55; }
+}
+
+.animate-lamp-pulse {
+    animation: lampPulse 5s infinite ease-in-out;
+}
+
+/* Screen Shake Effect for Generator Explosion */
+@keyframes shake {
+    0% { transform: translate(1px, 1px) rotate(0deg); }
+    10% { transform: translate(-2px, -2px) rotate(-1deg); }
+    20% { transform: translate(-3px, 0px) rotate(1deg); }
+    30% { transform: translate(3px, 2px) rotate(0deg); }
+    40% { transform: translate(1px, -1px) rotate(1deg); }
+    50% { transform: translate(-1px, 2px) rotate(-1deg); }
+    60% { transform: translate(-3px, 1px) rotate(0deg); }
+    70% { transform: translate(3px, 1px) rotate(-1deg); }
+    80% { transform: translate(-1px, -1px) rotate(1deg); }
+    90% { transform: translate(2px, 2px) rotate(0deg); }
+    100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
+
+.animate-shake {
+    animation: shake 0.6s infinite;
+}
+
+/* Slow Spin Animation for Disc */
+@keyframes spinSlow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+    animation: spinSlow 8s linear infinite;
+}
+
+/* ==========================================
+   SUBTLE ENVIRONMENTAL HOTSPOTS
+========================================== */
+.hotspot {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer !important;
+    outline: none;
+    z-index: 25;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.hotspot:hover {
+    transform: scale(1.15);
+}
+
+.hotspot:active {
+    transform: scale(0.92);
+}
+
+.spot-pulse {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    animation: pulseRing 3s infinite ease-out;
+}
+
+@keyframes pulseRing {
+    0% {
+        transform: scale(0.6);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.3);
+        opacity: 0.25;
+    }
+    100% {
+        transform: scale(1.7);
+        opacity: 0;
+    }
+}
+
+.spot-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    background: rgba(10, 13, 24, 0.55);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    color: rgba(241, 245, 249, 0.85);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.hotspot:hover .spot-card {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.45);
+    color: #ffffff;
+    box-shadow: 0 0 20px rgba(167, 139, 250, 0.4);
+}
+
+/* ==========================================
+   GLASSMORPHISM PILL
+========================================== */
+.glass-pill {
+    background: rgba(10, 13, 24, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* ==========================================
+   FLOATING SKY MESSAGE PARTICLE ANIMATION
+========================================== */
+.sky-thought-particle {
+    position: fixed;
+    pointer-events: none;
+    z-index: 45;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-style: italic;
+    font-size: 13px;
+    color: rgba(254, 243, 199, 0.95);
+    text-shadow: 0 0 14px rgba(255, 183, 77, 0.7);
+    background: rgba(168, 85, 247, 0.15);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 7px 18px;
+    border-radius: 9999px;
+    box-shadow: 0 0 25px rgba(168, 85, 247, 0.3);
+    animation: floatUpSky 6s ease-out forwards;
+}
+
+@keyframes floatUpSky {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, 20px) scale(0.9);
+    }
+    15% {
+        opacity: 1;
+        transform: translate(-50%, 0px) scale(1);
+    }
+    80% {
+        opacity: 0.8;
+        transform: translate(-50%, -180px) scale(0.95);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -240px) scale(0.8);
+    }
+}
+
+/* ==========================================
+   CUSTOM RANGE SLIDER
+========================================== */
+.range-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.15);
+    outline: none;
+}
+
+.range-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #ffffff;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    transition: transform 0.15s ease;
+}
+
+.range-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.25);
+}
+
+/* ==========================================
+   RESPONSIVE ADJUSTMENTS FOR MOBILE
+========================================== */
+@media (max-width: 640px) {
+    .spot-card span {
+        font-size: 9px;
+    }
+    .spot-card {
+        padding: 4px 8px;
+    }
+    .spot-pulse {
+        width: 24px;
+        height: 24px;
+    }
+}
