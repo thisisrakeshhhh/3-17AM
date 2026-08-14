@@ -51,7 +51,7 @@ export default function Home() {
   const [isRadioSheetOpen, setIsRadioSheetOpen] = useState(false);
   const [isRightDrawerOpen, setIsRightDrawerOpen] = useState(false);
   
-  // Audio & Power States
+  // Audio & Power States — BOTH SOUND & RAIN OFF BY DEFAULT
   const [isDrawerNotifEnabled, setIsDrawerNotifEnabled] = useState(true);
   const [isRainAudioMuted, setIsRainAudioMuted] = useState(true);
   const [isRadioPlaying, setIsRadioPlaying] = useState(false);
@@ -304,7 +304,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [isDrawerNotifEnabled]);
 
-  // 5. Web Audio API Engine
+  // 5. Web Audio API Engine — Rain & Fan Audio Start OFF by Default
   const initAudioEngine = () => {
     if (audioCtxRef.current) {
       if (audioCtxRef.current.state === "suspended") {
@@ -329,7 +329,7 @@ export default function Home() {
     muffle.connect(master);
     master.connect(ctx.destination);
 
-    // Rain Noise Generator
+    // Rain Noise Generator — STARTS OFF (GAIN 0) BY DEFAULT
     const bufferSize = ctx.sampleRate * 2;
     const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const output = noiseBuffer.getChannelData(0);
@@ -344,7 +344,7 @@ export default function Home() {
     rainFilter.frequency.value = 1100;
 
     const rainGain = ctx.createGain();
-    rainGain.gain.setValueAtTime(0.22, ctx.currentTime);
+    rainGain.gain.setValueAtTime(0, ctx.currentTime); // DEFAULT OFF
     rainGainRef.current = rainGain;
 
     rainNoise.connect(rainFilter);
@@ -352,7 +352,7 @@ export default function Home() {
     rainGain.connect(muffle);
     rainNoise.start();
 
-    // Room Rumble Fan
+    // Room Rumble Fan — STARTS OFF (GAIN 0) BY DEFAULT
     const fanOsc = ctx.createOscillator();
     fanOsc.type = "sawtooth";
     fanOsc.frequency.value = 52;
@@ -362,7 +362,7 @@ export default function Home() {
     fanFilter.frequency.value = 130;
 
     const fanGain = ctx.createGain();
-    fanGain.gain.setValueAtTime(0.1, ctx.currentTime);
+    fanGain.gain.setValueAtTime(0, ctx.currentTime); // DEFAULT OFF
     fanGainRef.current = fanGain;
 
     fanOsc.connect(fanFilter);
@@ -495,10 +495,11 @@ export default function Home() {
     };
   }, []);
 
-  // Enter App Launch
+  // Enter App Launch — DO NOT AUTOPLAY ANY SOUND
   const handleEnterApp = () => {
     setIsEntered(true);
     initAudioEngine();
+    // Both rain sound & radio music start OFF by default as requested!
   };
 
   // Hotspot Click Multi-stage Dialogue
@@ -870,7 +871,7 @@ export default function Home() {
               onClick={() => setIsRadioSheetOpen(true)}
               className="cursor-pointer flex items-center gap-2.5 min-w-0 text-left flex-1"
             >
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              <span className={`w-2 h-2 rounded-full ${isRadioPlaying ? "bg-emerald-400 animate-pulse" : "bg-slate-500"}`} />
               <div className="min-w-0">
                 <div className="text-xs font-bold text-white truncate">{currentRoom.trackTitle}</div>
                 <div className="text-[10px] font-mono text-slate-400 truncate">{currentRoom.trackArtist}</div>
