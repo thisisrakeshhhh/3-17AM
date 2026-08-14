@@ -36,7 +36,9 @@ import {
   Music,
   Heart,
   Send,
-  Maximize2
+  Maximize2,
+  ChevronUp,
+  Minus
 } from "lucide-react";
 
 export default function Home() {
@@ -50,6 +52,7 @@ export default function Home() {
   const [isCommunitySheetOpen, setIsCommunitySheetOpen] = useState(false);
   const [isRadioSheetOpen, setIsRadioSheetOpen] = useState(false);
   const [isRightDrawerOpen, setIsRightDrawerOpen] = useState(false);
+  const [isPlayerCardMinimized, setIsPlayerCardMinimized] = useState(false);
   
   // Audio & Power States — BOTH SOUND & RAIN OFF BY DEFAULT
   const [isDrawerNotifEnabled, setIsDrawerNotifEnabled] = useState(true);
@@ -58,6 +61,7 @@ export default function Home() {
   const [powerLevel, setPowerLevel] = useState(60);
   const [likedTracks, setLikedTracks] = useState<string[]>([]);
   const [audioProgress, setAudioProgress] = useState(35);
+  const [musicVolume, setMusicVolume] = useState(80);
 
   // Modals
   const [isCustomRoomModalOpen, setIsCustomRoomModalOpen] = useState(false);
@@ -115,6 +119,13 @@ export default function Home() {
 
   // Audio Player Ref for Real Custom MP3 Playback
   const htmlAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Sync music volume with audio element
+  useEffect(() => {
+    if (htmlAudioRef.current) {
+      htmlAudioRef.current.volume = musicVolume / 100;
+    }
+  }, [musicVolume]);
 
   // Rooms metadata & custom MP3 audio URLs
   const [rooms, setRooms] = useState<Record<string, any>>({
@@ -861,39 +872,100 @@ export default function Home() {
         )}
 
         {/* ==================================================
-            3. MINIMAL FLOATING MOBILE DOCK & COMPACT PLAYER
+            3. MINIMAL FLOATING MOBILE DOCK & SLIDING COMPACT PLAYER
            ================================================== */}
         <footer className="w-full flex flex-col items-center justify-end gap-3 pointer-events-auto z-30 relative pb-1">
           
-          {/* COLLAPSED MINI-PLAYER BAR */}
-          <div className="w-full max-w-sm bg-[#0a0d18]/85 border border-amber-500/30 rounded-full p-2 pl-3.5 pr-2 backdrop-blur-xl shadow-2xl flex items-center justify-between gap-3">
-            <button
-              onClick={() => setIsRadioSheetOpen(true)}
-              className="cursor-pointer flex items-center gap-2.5 min-w-0 text-left flex-1"
-            >
-              <span className={`w-2 h-2 rounded-full ${isRadioPlaying ? "bg-emerald-400 animate-pulse" : "bg-slate-500"}`} />
-              <div className="min-w-0">
-                <div className="text-xs font-bold text-white truncate">{currentRoom.trackTitle}</div>
-                <div className="text-[10px] font-mono text-slate-400 truncate">{currentRoom.trackArtist}</div>
+          {/* SLIDEABLE MUSIC PLAYER BAR (EXPANDED OR MINIMIZED PILL SLIDER) */}
+          {!isPlayerCardMinimized ? (
+            <div className="w-full max-w-sm bg-[#0a0d18]/90 border border-amber-500/30 rounded-3xl p-3 backdrop-blur-xl shadow-2xl space-y-2.5 transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => setIsRadioSheetOpen(true)}
+                  className="cursor-pointer flex items-center gap-2 text-left min-w-0 flex-1"
+                >
+                  <span className={`w-2 h-2 rounded-full ${isRadioPlaying ? "bg-emerald-400 animate-pulse" : "bg-slate-500"}`} />
+                  <span className="text-xs font-mono font-bold text-white truncate">🎵 {currentRoom.trackTitle}</span>
+                </button>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setIsPlayerCardMinimized(true)}
+                    title="Slide Down / Minimize"
+                    className="cursor-pointer p-1 rounded-full text-slate-400 hover:text-white transition"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setIsRadioSheetOpen(true)}
+                    title="Expand Full Sheet"
+                    className="cursor-pointer p-1 rounded-full text-slate-400 hover:text-white transition"
+                  >
+                    <Maximize2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
-            </button>
 
-            <div className="flex items-center gap-1.5 shrink-0">
-              <button
-                onClick={() => toggleRadioPlayback()}
-                className="cursor-pointer p-2 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow-md transition active:scale-95"
-              >
-                {isRadioPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-              </button>
+              {/* MUSIC PLAYER CONTROLS + VOLUME SLIDER */}
+              <div className="flex items-center justify-between gap-3 p-2 rounded-2xl bg-white/5 border border-white/10">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <button
+                    onClick={() => toggleRadioPlayback()}
+                    className="cursor-pointer p-2 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow-md transition active:scale-95 shrink-0"
+                  >
+                    {isRadioPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+                  </button>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[11px] font-bold text-white truncate">{currentRoom.trackArtist}</div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={musicVolume}
+                      onChange={(e) => setMusicVolume(Number(e.target.value))}
+                      className="range-slider cursor-pointer mt-1"
+                      title="Volume Slider"
+                    />
+                  </div>
+                </div>
 
-              <button
-                onClick={() => setIsRadioSheetOpen(true)}
-                className="cursor-pointer p-2 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 transition"
-              >
-                <Maximize2 className="w-3.5 h-3.5" />
-              </button>
+                <button
+                  onClick={() => toggleTrackLike(currentRoom.trackTitle)}
+                  className="cursor-pointer p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-amber-300 shrink-0"
+                >
+                  <Heart className={`w-3.5 h-3.5 ${likedTracks.includes(currentRoom.trackTitle) ? "fill-amber-400 text-amber-400" : ""}`} />
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            /* MINIMIZED SLIDE TOGGLE PILL (SLIDES UP WHEN TAPPED) */
+            <div className="w-full max-w-sm bg-[#0a0d18]/85 border border-amber-500/30 rounded-full p-2 pl-3.5 pr-2 backdrop-blur-xl shadow-2xl flex items-center justify-between gap-2 animate-sheet-up">
+              <button
+                onClick={() => setIsPlayerCardMinimized(false)}
+                className="cursor-pointer flex items-center gap-2 text-left min-w-0 flex-1"
+              >
+                <span className={`w-2 h-2 rounded-full ${isRadioPlaying ? "bg-emerald-400 animate-pulse" : "bg-slate-500"}`} />
+                <span className="text-xs font-mono text-amber-200 font-semibold truncate">🎵 {currentRoom.trackTitle}</span>
+              </button>
+
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  onClick={() => toggleRadioPlayback()}
+                  className="cursor-pointer p-1.5 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow-md transition active:scale-95"
+                >
+                  {isRadioPlaying ? <Pause className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
+                </button>
+
+                <button
+                  onClick={() => setIsPlayerCardMinimized(false)}
+                  className="cursor-pointer px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-[10px] font-mono text-slate-300 flex items-center gap-1"
+                >
+                  <span>slide up</span>
+                  <ChevronUp className="w-3 h-3 text-amber-300" />
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* FLOATING ACTION DOCK */}
           <div className="flex items-center gap-2 bg-[#05070d]/80 border border-white/15 p-1.5 px-3 rounded-full backdrop-blur-2xl shadow-2xl">
@@ -1057,6 +1129,22 @@ export default function Home() {
                 <span>01:12</span>
                 <span>03:45</span>
               </div>
+            </div>
+
+            {/* VOLUME SLIDER */}
+            <div className="space-y-1.5 bg-white/5 p-3 rounded-2xl border border-white/10">
+              <div className="flex justify-between text-xs font-mono text-slate-300">
+                <span className="flex items-center gap-1.5"><Volume2 className="w-3.5 h-3.5 text-amber-300" /> music volume</span>
+                <span>{musicVolume}%</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={musicVolume}
+                onChange={(e) => setMusicVolume(Number(e.target.value))}
+                className="range-slider cursor-pointer"
+              />
             </div>
 
             {/* PLAYER CONTROLS */}
