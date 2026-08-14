@@ -8,7 +8,6 @@ import {
   Volume2,
   VolumeX,
   Users,
-  Sliders,
   Moon,
   CloudRain,
   Laptop,
@@ -32,7 +31,6 @@ import {
   Cpu,
   Feather,
   ChevronRight,
-  Wind,
   Music,
   Heart,
   Send,
@@ -66,7 +64,6 @@ export default function Home() {
   const [isCustomRoomModalOpen, setIsCustomRoomModalOpen] = useState(false);
   const [isThoughtModalOpen, setIsThoughtModalOpen] = useState(false);
   const [isLightsModalOpen, setIsLightsModalOpen] = useState(false);
-  const [isMixerModalOpen, setIsMixerModalOpen] = useState(false);
   const [isGeneratorOverlayOpen, setIsGeneratorOverlayOpen] = useState(false);
   const [isSuggestSongModalOpen, setIsSuggestSongModalOpen] = useState(false);
 
@@ -893,7 +890,7 @@ export default function Home() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsLightsModalOpen(true)}
-                className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/90 hover:bg-slate-900 border border-amber-500/30 text-[11px] sm:text-xs font-mono text-slate-200 shadow-xl transition active:scale-95"
+                className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-slate-900/90 hover:bg-slate-900 border border-amber-500/30 text-[11px] sm:text-xs font-mono text-slate-200 shadow-xl transition active:scale-95"
               >
                 <Zap className="w-3.5 h-3.5 text-amber-400" />
                 <span className="font-bold">⚡ POWER</span>
@@ -901,7 +898,7 @@ export default function Home() {
 
               <button
                 onClick={() => setIsThoughtModalOpen(true)}
-                className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-[11px] sm:text-xs font-sans text-slate-200 transition active:scale-95 shadow-lg"
+                className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-[11px] sm:text-xs font-sans text-slate-200 transition active:scale-95 shadow-lg"
               >
                 <Feather className="w-3.5 h-3.5 text-purple-300" />
                 <span>leave a note ✨</span>
@@ -1454,7 +1451,7 @@ export default function Home() {
                 setCurrentRoomKey(key);
                 setIsCustomRoomModalOpen(false);
               }}
-              className="cursor-pointer w-full py-3 rounded-full bg-amber-500 hover:bg-amber-400 text-xs font-mono text-slate-950 font-bold transition active:scale-95 shadow-lg"
+              className="cursor-pointer w-full py-3 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs font-mono transition active:scale-95 shadow-lg"
             >
               launch custom room 🚀
             </button>
