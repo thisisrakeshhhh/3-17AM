@@ -9,7 +9,12 @@ bindings = [
 
 [[migrations]]
 tag = "v1"
-new_classes = ["PresenceDurableObject"]
+new_sqlite_classes = ["PresenceDurableObject"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "nost-317am-db"
+database_id = "a117767b-186d-4c94-a0d1-5b5e6e77921d"
 
 [site]
 bucket = "./"
