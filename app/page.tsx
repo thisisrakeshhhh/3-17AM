@@ -37,8 +37,7 @@ import {
   Heart,
   Send,
   Maximize2,
-  ChevronUp,
-  Minus
+  ChevronUp
 } from "lucide-react";
 
 export default function Home() {
@@ -54,10 +53,10 @@ export default function Home() {
   const [isRightDrawerOpen, setIsRightDrawerOpen] = useState(false);
   const [isPlayerCardMinimized, setIsPlayerCardMinimized] = useState(false);
   
-  // Audio & Power States — BOTH SOUND & RAIN OFF BY DEFAULT
+  // Audio & Power States — RADIO PLAYING BY DEFAULT
   const [isDrawerNotifEnabled, setIsDrawerNotifEnabled] = useState(true);
   const [isRainAudioMuted, setIsRainAudioMuted] = useState(true);
-  const [isRadioPlaying, setIsRadioPlaying] = useState(false);
+  const [isRadioPlaying, setIsRadioPlaying] = useState(true);
   const [powerLevel, setPowerLevel] = useState(60);
   const [likedTracks, setLikedTracks] = useState<string[]>([]);
   const [audioProgress, setAudioProgress] = useState(35);
@@ -315,7 +314,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [isDrawerNotifEnabled]);
 
-  // 5. Web Audio API Engine — Rain & Fan Audio Start OFF by Default
+  // 5. Web Audio API Engine
   const initAudioEngine = () => {
     if (audioCtxRef.current) {
       if (audioCtxRef.current.state === "suspended") {
@@ -340,7 +339,7 @@ export default function Home() {
     muffle.connect(master);
     master.connect(ctx.destination);
 
-    // Rain Noise Generator — STARTS OFF (GAIN 0) BY DEFAULT
+    // Rain Noise Generator
     const bufferSize = ctx.sampleRate * 2;
     const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const output = noiseBuffer.getChannelData(0);
@@ -355,7 +354,7 @@ export default function Home() {
     rainFilter.frequency.value = 1100;
 
     const rainGain = ctx.createGain();
-    rainGain.gain.setValueAtTime(0, ctx.currentTime); // DEFAULT OFF
+    rainGain.gain.setValueAtTime(0, ctx.currentTime);
     rainGainRef.current = rainGain;
 
     rainNoise.connect(rainFilter);
@@ -363,7 +362,7 @@ export default function Home() {
     rainGain.connect(muffle);
     rainNoise.start();
 
-    // Room Rumble Fan — STARTS OFF (GAIN 0) BY DEFAULT
+    // Room Rumble Fan
     const fanOsc = ctx.createOscillator();
     fanOsc.type = "sawtooth";
     fanOsc.frequency.value = 52;
@@ -373,7 +372,7 @@ export default function Home() {
     fanFilter.frequency.value = 130;
 
     const fanGain = ctx.createGain();
-    fanGain.gain.setValueAtTime(0, ctx.currentTime); // DEFAULT OFF
+    fanGain.gain.setValueAtTime(0, ctx.currentTime);
     fanGainRef.current = fanGain;
 
     fanOsc.connect(fanFilter);
@@ -506,11 +505,11 @@ export default function Home() {
     };
   }, []);
 
-  // Enter App Launch — DO NOT AUTOPLAY ANY SOUND
+  // Enter App Launch — RADIO MUSIC PLAYS BY DEFAULT ON ENTER
   const handleEnterApp = () => {
     setIsEntered(true);
     initAudioEngine();
-    // Both rain sound & radio music start OFF by default as requested!
+    toggleRadioPlayback(true);
   };
 
   // Hotspot Click Multi-stage Dialogue
@@ -872,126 +871,135 @@ export default function Home() {
         )}
 
         {/* ==================================================
-            3. MINIMAL FLOATING MOBILE DOCK & SLIDING COMPACT PLAYER
+            3. MINIMAL FLOATING MOBILE DOCK & SLIDING COMPACT PLAYER WITH PROGRESS BAR
            ================================================== */}
-        <footer className="w-full flex flex-col items-center justify-end gap-3 pointer-events-auto z-30 relative pb-1">
+        <footer className="w-full flex flex-col md:flex-row items-end md:items-center justify-between gap-3 pointer-events-auto z-30 relative pb-1">
           
-          {/* SLIDEABLE MUSIC PLAYER BAR (EXPANDED OR MINIMIZED PILL SLIDER) */}
-          {!isPlayerCardMinimized ? (
-            <div className="w-full max-w-sm bg-[#0a0d18]/90 border border-amber-500/30 rounded-3xl p-3 backdrop-blur-xl shadow-2xl space-y-2.5 transition-all duration-300">
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={() => setIsRadioSheetOpen(true)}
-                  className="cursor-pointer flex items-center gap-2 text-left min-w-0 flex-1"
-                >
-                  <span className={`w-2 h-2 rounded-full ${isRadioPlaying ? "bg-emerald-400 animate-pulse" : "bg-slate-500"}`} />
-                  <span className="text-xs font-mono font-bold text-white truncate">🎵 {currentRoom.trackTitle}</span>
-                </button>
+          {/* BOTTOM LEFT: POWER & PROGRESS BAR */}
+          <div className="flex flex-col items-start gap-1.5 order-2 md:order-1">
+            <div className="w-48 sm:w-56 bg-slate-900/80 rounded-2xl p-2.5 border border-amber-500/30 backdrop-blur-xl shadow-xl space-y-1">
+              <div className="flex items-center justify-between text-[11px] font-mono text-amber-300">
+                <span className="flex items-center gap-1.5"><Zap className="w-3 h-3 text-amber-400" /> NIGHT POWER</span>
+                <span className="font-bold">{powerLevel}%</span>
+              </div>
+              <div className="w-full bg-white/10 rounded-full h-1.5 border border-white/10 overflow-hidden">
+                <div
+                  className="bg-gradient-to-r from-amber-500 to-yellow-400 h-full rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]"
+                  style={{ width: `${powerLevel}%` }}
+                />
+              </div>
+            </div>
 
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setIsPlayerCardMinimized(true)}
-                    title="Slide Down / Minimize"
-                    className="cursor-pointer p-1 rounded-full text-slate-400 hover:text-white transition"
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                  </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsLightsModalOpen(true)}
+                className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/90 hover:bg-slate-900 border border-amber-500/30 text-[11px] sm:text-xs font-mono text-slate-200 shadow-xl transition active:scale-95"
+              >
+                <Zap className="w-3.5 h-3.5 text-amber-400" />
+                <span className="font-bold">⚡ POWER</span>
+              </button>
+
+              <button
+                onClick={() => setIsThoughtModalOpen(true)}
+                className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-[11px] sm:text-xs font-sans text-slate-200 transition active:scale-95 shadow-lg"
+              >
+                <Feather className="w-3.5 h-3.5 text-purple-300" />
+                <span>leave a note ✨</span>
+              </button>
+            </div>
+          </div>
+
+          {/* BOTTOM RIGHT: SLIDEABLE MUSIC PLAYER BAR */}
+          <div className="order-1 md:order-2 w-full md:w-auto">
+            {!isPlayerCardMinimized ? (
+              <div className="w-full max-w-sm bg-[#0a0d18]/90 border border-amber-500/30 rounded-3xl p-3 backdrop-blur-xl shadow-2xl space-y-2.5 transition-all duration-300">
+                <div className="flex items-center justify-between">
                   <button
                     onClick={() => setIsRadioSheetOpen(true)}
-                    title="Expand Full Sheet"
-                    className="cursor-pointer p-1 rounded-full text-slate-400 hover:text-white transition"
+                    className="cursor-pointer flex items-center gap-2 text-left min-w-0 flex-1"
                   >
-                    <Maximize2 className="w-3.5 h-3.5" />
+                    <span className={`w-2 h-2 rounded-full ${isRadioPlaying ? "bg-emerald-400 animate-pulse" : "bg-slate-500"}`} />
+                    <span className="text-xs font-mono font-bold text-white truncate">🎵 {currentRoom.trackTitle}</span>
                   </button>
-                </div>
-              </div>
 
-              {/* MUSIC PLAYER CONTROLS + VOLUME SLIDER */}
-              <div className="flex items-center justify-between gap-3 p-2 rounded-2xl bg-white/5 border border-white/10">
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <button
-                    onClick={() => toggleRadioPlayback()}
-                    className="cursor-pointer p-2 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow-md transition active:scale-95 shrink-0"
-                  >
-                    {isRadioPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-                  </button>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[11px] font-bold text-white truncate">{currentRoom.trackArtist}</div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={musicVolume}
-                      onChange={(e) => setMusicVolume(Number(e.target.value))}
-                      className="range-slider cursor-pointer mt-1"
-                      title="Volume Slider"
-                    />
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setIsPlayerCardMinimized(true)}
+                      title="Slide Down / Minimize"
+                      className="cursor-pointer p-1 rounded-full text-slate-400 hover:text-white transition"
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setIsRadioSheetOpen(true)}
+                      title="Expand Full Sheet"
+                      className="cursor-pointer p-1 rounded-full text-slate-400 hover:text-white transition"
+                    >
+                      <Maximize2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
 
-                <button
-                  onClick={() => toggleTrackLike(currentRoom.trackTitle)}
-                  className="cursor-pointer p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-amber-300 shrink-0"
-                >
-                  <Heart className={`w-3.5 h-3.5 ${likedTracks.includes(currentRoom.trackTitle) ? "fill-amber-400 text-amber-400" : ""}`} />
-                </button>
+                {/* MUSIC PLAYER CONTROLS + VOLUME SLIDER */}
+                <div className="flex items-center justify-between gap-3 p-2 rounded-2xl bg-white/5 border border-white/10">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <button
+                      onClick={() => toggleRadioPlayback()}
+                      className="cursor-pointer p-2 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow-md transition active:scale-95 shrink-0"
+                    >
+                      {isRadioPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+                    </button>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[11px] font-bold text-white truncate">{currentRoom.trackArtist}</div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={musicVolume}
+                        onChange={(e) => setMusicVolume(Number(e.target.value))}
+                        className="range-slider cursor-pointer mt-1"
+                        title="Volume Slider"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => toggleTrackLike(currentRoom.trackTitle)}
+                    className="cursor-pointer p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-amber-300 shrink-0"
+                  >
+                    <Heart className={`w-3.5 h-3.5 ${likedTracks.includes(currentRoom.trackTitle) ? "fill-amber-400 text-amber-400" : ""}`} />
+                  </button>
+                </div>
               </div>
-            </div>
-          ) : (
-            /* MINIMIZED SLIDE TOGGLE PILL (SLIDES UP WHEN TAPPED) */
-            <div className="w-full max-w-sm bg-[#0a0d18]/85 border border-amber-500/30 rounded-full p-2 pl-3.5 pr-2 backdrop-blur-xl shadow-2xl flex items-center justify-between gap-2 animate-sheet-up">
-              <button
-                onClick={() => setIsPlayerCardMinimized(false)}
-                className="cursor-pointer flex items-center gap-2 text-left min-w-0 flex-1"
-              >
-                <span className={`w-2 h-2 rounded-full ${isRadioPlaying ? "bg-emerald-400 animate-pulse" : "bg-slate-500"}`} />
-                <span className="text-xs font-mono text-amber-200 font-semibold truncate">🎵 {currentRoom.trackTitle}</span>
-              </button>
-
-              <div className="flex items-center gap-1 shrink-0">
-                <button
-                  onClick={() => toggleRadioPlayback()}
-                  className="cursor-pointer p-1.5 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow-md transition active:scale-95"
-                >
-                  {isRadioPlaying ? <Pause className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
-                </button>
-
+            ) : (
+              /* MINIMIZED SLIDE TOGGLE PILL */
+              <div className="w-full max-w-sm bg-[#0a0d18]/85 border border-amber-500/30 rounded-full p-2 pl-3.5 pr-2 backdrop-blur-xl shadow-2xl flex items-center justify-between gap-2 animate-sheet-up">
                 <button
                   onClick={() => setIsPlayerCardMinimized(false)}
-                  className="cursor-pointer px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-[10px] font-mono text-slate-300 flex items-center gap-1"
+                  className="cursor-pointer flex items-center gap-2 text-left min-w-0 flex-1"
                 >
-                  <span>slide up</span>
-                  <ChevronUp className="w-3 h-3 text-amber-300" />
+                  <span className={`w-2 h-2 rounded-full ${isRadioPlaying ? "bg-emerald-400 animate-pulse" : "bg-slate-500"}`} />
+                  <span className="text-xs font-mono text-amber-200 font-semibold truncate">🎵 {currentRoom.trackTitle}</span>
                 </button>
+
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => toggleRadioPlayback()}
+                    className="cursor-pointer p-1.5 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow-md transition active:scale-95"
+                  >
+                    {isRadioPlaying ? <Pause className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
+                  </button>
+
+                  <button
+                    onClick={() => setIsPlayerCardMinimized(false)}
+                    className="cursor-pointer px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-[10px] font-mono text-slate-300 flex items-center gap-1"
+                  >
+                    <span>slide up</span>
+                    <ChevronUp className="w-3 h-3 text-amber-300" />
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
-
-          {/* FLOATING ACTION DOCK */}
-          <div className="flex items-center gap-2 bg-[#05070d]/80 border border-white/15 p-1.5 px-3 rounded-full backdrop-blur-2xl shadow-2xl">
-            <button
-              onClick={() => setIsRadioSheetOpen(true)}
-              className="cursor-pointer px-3.5 py-1.5 rounded-full bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-xs font-mono text-amber-200 transition active:scale-95 flex items-center gap-1.5"
-            >
-              <Music className="w-3.5 h-3.5 text-amber-300" />
-              <span>RADIO</span>
-            </button>
-
-            <button
-              onClick={() => setIsThoughtModalOpen(true)}
-              className="cursor-pointer px-3.5 py-1.5 rounded-full bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-xs font-mono text-purple-200 transition active:scale-95 flex items-center gap-1.5"
-            >
-              <Feather className="w-3.5 h-3.5 text-purple-300" />
-              <span>NOTE</span>
-            </button>
-
-            <button
-              onClick={() => setIsLightsModalOpen(true)}
-              className="cursor-pointer px-3.5 py-1.5 rounded-full bg-slate-800/90 hover:bg-slate-800 border border-amber-500/30 text-xs font-mono text-slate-200 transition active:scale-95 flex items-center gap-1.5"
-            >
-              <Zap className="w-3.5 h-3.5 text-amber-400" />
-              <span className="font-bold">{powerLevel}%</span>
-            </button>
+            )}
           </div>
         </footer>
       </main>
