@@ -16,15 +16,29 @@ button, a, input, select, textarea, .hotspot, .mood-btn, .pay-option {
     cursor: pointer !important;
 }
 
+/* MOBILE BACKGROUND OPTIMIZATION */
+.room-bg-layer {
+    background-size: cover;
+    background-position: center center;
+    transition: background-image 1s ease-in-out;
+}
+
+@media (max-width: 640px) {
+    .room-bg-layer {
+        background-size: cover;
+        background-position: 50% 25%;
+    }
+}
+
 /* KEN BURNS SLOW PAN & ZOOM ANIMATION FOR BACKGROUND IMAGES */
 @keyframes kenBurns {
     0% { transform: scale(1) translate(0, 0); }
-    50% { transform: scale(1.06) translate(-1.5%, -1%); }
+    50% { transform: scale(1.05) translate(-1%, -0.8%); }
     100% { transform: scale(1) translate(0, 0); }
 }
 
 .animate-kenburns {
-    animation: kenBurns 20s infinite ease-in-out alternate;
+    animation: kenBurns 22s infinite ease-in-out alternate;
 }
 
 /* SCREEN FLICKER GLOW FOR LAPTOP / TV */
@@ -79,7 +93,7 @@ button, a, input, select, textarea, .hotspot, .mood-btn, .pay-option {
 }
 
 /* ==========================================
-   SUBTLE ENVIRONMENTAL HOTSPOTS
+   SUBTLE ENVIRONMENTAL HOTSPOTS & MOBILE RESPONSIVENESS
 ========================================== */
 .hotspot {
     position: absolute;
@@ -93,7 +107,7 @@ button, a, input, select, textarea, .hotspot, .mood-btn, .pay-option {
 }
 
 .hotspot:hover {
-    transform: scale(1.15);
+    transform: scale(1.12);
 }
 
 .hotspot:active {
@@ -102,8 +116,8 @@ button, a, input, select, textarea, .hotspot, .mood-btn, .pay-option {
 
 .spot-pulse {
     position: absolute;
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.12);
     border: 1px solid rgba(255, 255, 255, 0.25);
@@ -129,15 +143,15 @@ button, a, input, select, textarea, .hotspot, .mood-btn, .pay-option {
     position: relative;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     padding: 4px 10px;
     border-radius: 9999px;
-    background: rgba(10, 13, 24, 0.55);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(10, 13, 24, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-    color: rgba(241, 245, 249, 0.85);
+    color: rgba(241, 245, 249, 0.9);
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
     font-weight: 500;
@@ -146,17 +160,17 @@ button, a, input, select, textarea, .hotspot, .mood-btn, .pay-option {
 }
 
 .hotspot:hover .spot-card {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.5);
     color: #ffffff;
-    box-shadow: 0 0 20px rgba(167, 139, 250, 0.4);
+    box-shadow: 0 0 20px rgba(167, 139, 250, 0.5);
 }
 
 /* ==========================================
    GLASSMORPHISM PILL
 ========================================== */
 .glass-pill {
-    background: rgba(10, 13, 24, 0.85);
+    background: rgba(10, 13, 24, 0.88);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.15);
@@ -232,17 +246,18 @@ button, a, input, select, textarea, .hotspot, .mood-btn, .pay-option {
 }
 
 /* ==========================================
-   RESPONSIVE ADJUSTMENTS FOR MOBILE
+   RESPONSIVE ADJUSTMENTS FOR MOBILE PHONES
 ========================================== */
 @media (max-width: 640px) {
     .spot-card span {
-        font-size: 9px;
+        font-size: 8.5px;
     }
     .spot-card {
-        padding: 4px 8px;
+        padding: 3px 8px;
+        gap: 4px;
     }
     .spot-pulse {
-        width: 24px;
-        height: 24px;
+        width: 20px;
+        height: 20px;
     }
 }
