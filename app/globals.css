@@ -11,6 +11,17 @@
     display: none;
 }
 
+/* Safe area padding for notch & home bar */
+.pb-safe {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+.pt-safe {
+    padding-top: max(16px, env(safe-area-inset-top));
+}
+.h-dvh {
+    height: 100dvh;
+}
+
 /* Ensure cursor pointer on all interactive elements */
 button, a, input, select, textarea, .hotspot, .mood-btn, .pay-option {
     cursor: pointer !important;
@@ -92,6 +103,28 @@ button, a, input, select, textarea, .hotspot, .mood-btn, .pay-option {
     animation: spinSlow 8s linear infinite;
 }
 
+/* Bottom Sheet Spring Slide Up Animation */
+@keyframes slideUpSheet {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-sheet-up {
+    animation: slideUpSheet 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Floating note particle rising upward */
+@keyframes noteRiseUp {
+    0% { transform: translate(-50%, 0) scale(0.8); opacity: 0; }
+    20% { opacity: 1; transform: translate(-50%, -80px) scale(1.1); }
+    80% { opacity: 0.8; transform: translate(-50%, -300px) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -450px) scale(0.6); }
+}
+
+.animate-note-rise {
+    animation: noteRiseUp 5.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
 /* ==========================================
    SUBTLE ENVIRONMENTAL HOTSPOTS & MOBILE RESPONSIVENESS
 ========================================== */
@@ -116,8 +149,8 @@ button, a, input, select, textarea, .hotspot, .mood-btn, .pay-option {
 
 .spot-pulse {
     position: absolute;
-    width: 26px;
-    height: 26px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.12);
     border: 1px solid rgba(255, 255, 255, 0.25);
@@ -146,10 +179,10 @@ button, a, input, select, textarea, .hotspot, .mood-btn, .pay-option {
     gap: 5px;
     padding: 4px 10px;
     border-radius: 9999px;
-    background: rgba(10, 13, 24, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(5, 7, 13, 0.65);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     color: rgba(241, 245, 249, 0.9);
     font-family: 'JetBrains Mono', monospace;
@@ -160,7 +193,7 @@ button, a, input, select, textarea, .hotspot, .mood-btn, .pay-option {
 }
 
 .hotspot:hover .spot-card {
-    background: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.2);
     border-color: rgba(255, 255, 255, 0.5);
     color: #ffffff;
     box-shadow: 0 0 20px rgba(167, 139, 250, 0.5);
@@ -170,50 +203,10 @@ button, a, input, select, textarea, .hotspot, .mood-btn, .pay-option {
    GLASSMORPHISM PILL
 ========================================== */
 .glass-pill {
-    background: rgba(10, 13, 24, 0.88);
+    background: rgba(5, 7, 13, 0.75);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-/* ==========================================
-   FLOATING SKY MESSAGE PARTICLE ANIMATION
-========================================== */
-.sky-thought-particle {
-    position: fixed;
-    pointer-events: none;
-    z-index: 45;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-style: italic;
-    font-size: 13px;
-    color: rgba(254, 243, 199, 0.95);
-    text-shadow: 0 0 14px rgba(255, 183, 77, 0.7);
-    background: rgba(168, 85, 247, 0.15);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(168, 85, 247, 0.4);
-    padding: 7px 18px;
-    border-radius: 9999px;
-    box-shadow: 0 0 25px rgba(168, 85, 247, 0.3);
-    animation: floatUpSky 6s ease-out forwards;
-}
-
-@keyframes floatUpSky {
-    0% {
-        opacity: 0;
-        transform: translate(-50%, 20px) scale(0.9);
-    }
-    15% {
-        opacity: 1;
-        transform: translate(-50%, 0px) scale(1);
-    }
-    80% {
-        opacity: 0.8;
-        transform: translate(-50%, -180px) scale(0.95);
-    }
-    100% {
-        opacity: 0;
-        transform: translate(-50%, -240px) scale(0.8);
-    }
+    border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 /* ==========================================
@@ -245,9 +238,7 @@ button, a, input, select, textarea, .hotspot, .mood-btn, .pay-option {
     transform: scale(1.25);
 }
 
-/* ==========================================
-   RESPONSIVE ADJUSTMENTS FOR MOBILE PHONES
-========================================== */
+/* RESPONSIVE ADJUSTMENTS FOR MOBILE PHONES */
 @media (max-width: 640px) {
     .spot-card span {
         font-size: 8.5px;
@@ -257,7 +248,7 @@ button, a, input, select, textarea, .hotspot, .mood-btn, .pay-option {
         gap: 4px;
     }
     .spot-pulse {
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
     }
 }

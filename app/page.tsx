@@ -34,8 +34,9 @@ import {
   ChevronRight,
   Wind,
   Music,
-  ListMusic,
-  Send
+  Heart,
+  Send,
+  Maximize2
 } from "lucide-react";
 
 export default function Home() {
@@ -43,14 +44,20 @@ export default function Home() {
   const [realtimeClock, setRealtimeClock] = useState("03:17 AM");
   const [headerTitle, setHeaderTitle] = useState("🌙 3:17 AM BEDROOM (NIGHT OWL)");
   const [currentRoomKey, setCurrentRoomKey] = useState("bedroom");
-  const [isRoomDropdownOpen, setIsRoomDropdownOpen] = useState(false);
+  
+  // UI Expansion States (Bottom Sheets for Mobile First)
+  const [isMoodSheetOpen, setIsMoodSheetOpen] = useState(false);
+  const [isCommunitySheetOpen, setIsCommunitySheetOpen] = useState(false);
+  const [isRadioSheetOpen, setIsRadioSheetOpen] = useState(false);
   const [isRightDrawerOpen, setIsRightDrawerOpen] = useState(false);
-  const [drawerTab, setDrawerTab] = useState<"chat" | "owls" | "suggestions">("chat");
+  
+  // Audio & Power States
   const [isDrawerNotifEnabled, setIsDrawerNotifEnabled] = useState(true);
   const [isRainAudioMuted, setIsRainAudioMuted] = useState(false);
   const [isRadioPlaying, setIsRadioPlaying] = useState(false);
-  const [isPlayerCardVisible, setIsPlayerCardVisible] = useState(true);
   const [powerLevel, setPowerLevel] = useState(60);
+  const [likedTracks, setLikedTracks] = useState<string[]>([]);
+  const [audioProgress, setAudioProgress] = useState(35);
 
   // Modals
   const [isCustomRoomModalOpen, setIsCustomRoomModalOpen] = useState(false);
@@ -60,7 +67,7 @@ export default function Home() {
   const [isGeneratorOverlayOpen, setIsGeneratorOverlayOpen] = useState(false);
   const [isSuggestSongModalOpen, setIsSuggestSongModalOpen] = useState(false);
 
-  // Custom inputs
+  // Custom Inputs
   const [customRoomTitle, setCustomRoomTitle] = useState("");
   const [customTrackName, setCustomTrackName] = useState("");
   const [chatName, setChatName] = useState("");
@@ -88,21 +95,23 @@ export default function Home() {
   ]);
 
   const [owlsList, setOwlsList] = useState([
-    { name: "Arjun", city: "Chandigarh", bg: "bg-purple-500" },
     { name: "Riya", city: "Delhi", bg: "bg-indigo-500" },
+    { name: "Arjun", city: "Chandigarh", bg: "bg-purple-500" },
     { name: "Sarah", city: "NYC", bg: "bg-emerald-500" },
-    { name: "Unknown", city: "Unknown City", bg: "bg-amber-500" }
+    { name: "Kenji", city: "Tokyo", bg: "bg-amber-500" },
+    { name: "Emma", city: "London", bg: "bg-rose-500" }
   ]);
 
   // Dialogue Toast
   const [dialogue, setDialogue] = useState<{ text: string; sub: string } | null>(null);
   const dialogueTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Presence Toast
+  // Presence & General Toast
   const [presenceToast, setPresenceToast] = useState<string | null>(null);
-
-  // Toast message
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Cinematic Note Particle Rising Effect
+  const [risingParticleNote, setRisingParticleNote] = useState<string | null>(null);
 
   // Audio Player Ref for Real Custom MP3 Playback
   const htmlAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -111,60 +120,54 @@ export default function Home() {
   const [rooms, setRooms] = useState<Record<string, any>>({
     bedroom: {
       name: "🌙 3:17 AM BEDROOM (NIGHT OWL)",
-      label: "🌙 3:17 AM RADIO",
+      label: "can't sleep",
       listeners: "1,284",
       imgIdx: 0,
-      hasCRT: false,
       trackTitle: "After Dark",
       trackArtist: "Mr.Kitty · Midnight Mix",
       audioUrl: "/music/after_dark.mp3"
     },
     drive: {
       name: "🚗 NIGHT DRIVE",
-      label: "🚗 3:17 FM DRIVE",
+      label: "driving nowhere",
       listeners: "842",
       imgIdx: 1,
-      hasCRT: false,
       trackTitle: "Midnight City",
       trackArtist: "M83 · Night Highway Synth",
       audioUrl: "/music/midnight_city.mp3"
     },
     cafe: {
       name: "☕ 1:30 PM AFTERNOON BRAIN DRAIN",
-      label: "☕ CAFE JAZZ RADIO",
+      label: "cafe jazz",
       listeners: "419",
       imgIdx: 3,
-      hasCRT: false,
       trackTitle: "Cold Espresso Jazz",
       trackArtist: "3:17 AM Lounge Band",
       audioUrl: "/music/cold_espresso.mp3"
     },
     study: {
       name: "📚 8:00 AM MORNING COFFEE",
-      label: "📚 STUDY TAPE 2:48 AM",
+      label: "studying",
       listeners: "612",
       imgIdx: 2,
-      hasCRT: true,
       trackTitle: "2:48 AM Focus Beats",
       trackArtist: "Lo-Fi Study Tape",
       audioUrl: "/music/study_beats.mp3"
     },
     city: {
       name: "🌆 7:15 PM EVENING COMMUTE",
-      label: "🌆 CITY LIGHTS RADIO",
+      label: "evening commute",
       listeners: "953",
       imgIdx: 4,
-      hasCRT: false,
       trackTitle: "Space Song",
       trackArtist: "Beach House · Skyline Mix",
       audioUrl: "/music/space_song.mp3"
     },
     escape: {
       name: "🌊 MIDNIGHT ESCAPE",
-      label: "🌊 OCEAN WAVES RADIO",
+      label: "just listening",
       listeners: "320",
       imgIdx: 6,
-      hasCRT: false,
       trackTitle: "Ocean Resonance",
       trackArtist: "HOME · Ambient Waves",
       audioUrl: "/music/ocean_waves.mp3"
@@ -499,7 +502,7 @@ export default function Home() {
     toggleRadioPlayback(true);
   };
 
-  // Hotspot Click
+  // Hotspot Click Multi-stage Dialogue
   const handleHotspotClick = (spotKey: keyof typeof hotspotStages) => {
     const stages = hotspotStages[spotKey];
     if (!stages) return;
@@ -582,6 +585,22 @@ export default function Home() {
     }
   };
 
+  // Release Note into the Night (Particle Animation)
+  const handleReleaseNote = () => {
+    if (!thoughtText.trim()) return;
+
+    const note = thoughtText.trim();
+    setIsThoughtModalOpen(false);
+    setThoughtText("");
+
+    setRisingParticleNote(`" ${note} "`);
+    showToast("it's somewhere out there now ✨");
+
+    setTimeout(() => {
+      setRisingParticleNote(null);
+    }, 5500);
+  };
+
   // Generator Payment Explosion
   const handlePayGenerator = () => {
     setIsLightsModalOpen(false);
@@ -644,29 +663,39 @@ export default function Home() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
+  const toggleTrackLike = (title: string) => {
+    if (likedTracks.includes(title)) {
+      setLikedTracks(likedTracks.filter((t) => t !== title));
+      showToast("Removed from my night list");
+    } else {
+      setLikedTracks([...likedTracks, title]);
+      showToast("♡ Added to my night");
+    }
+  };
+
   const currentRoom = rooms[currentRoomKey] || rooms.bedroom;
 
   return (
-    <div className="fixed inset-0 w-full h-full bg-[#05070d] text-slate-100 font-sans overflow-hidden select-none">
+    <div className="fixed inset-0 w-full h-dvh bg-[#05070d] text-slate-100 font-sans overflow-hidden select-none">
       {/* HTML5 Audio Element for Real Custom MP3 Playback */}
       <audio ref={htmlAudioRef} src={currentRoom.audioUrl} loop />
 
-      {/* LAYER 0 & 1: DYNAMIC ROOM ENVIRONMENT & SLIDESHOW WITH MOBILE OPTIMIZATION */}
+      {/* LAYER 0 & 1: 100% CINEMATIC VIEWPORT BACKGROUND & ATMOSPHERE */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <div
           className="room-bg-layer absolute inset-0 bg-cover transition-all duration-1000 animate-kenburns opacity-100"
           style={{ backgroundImage: `url('${roomImages[currentRoom.imgIdx % roomImages.length]}')` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#05070d]/95 via-[#05070d]/60 to-[#05070d]/40 opacity-80" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#05070d]/95 via-[#05070d]/50 to-[#05070d]/35 opacity-90" />
         <div className="absolute inset-0 bg-radial-lamp opacity-40 animate-lamp-pulse" />
 
-        <canvas ref={rainCanvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-10 opacity-80" />
+        <canvas ref={rainCanvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-10 opacity-75" />
         <canvas ref={boomCanvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-15" />
       </div>
 
       {/* LAYER 2: INTRO SCREEN */}
       {!isEntered && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#05070d]/95 backdrop-blur-lg px-6 text-center transition-all duration-1000">
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#05070d]/95 backdrop-blur-xl px-6 text-center transition-all duration-1000">
           <div className="max-w-md w-full flex flex-col items-center space-y-6">
             <div className="space-y-2">
               <h1 className="font-mono text-6xl sm:text-7xl font-bold tracking-tight text-white drop-shadow-[0_0_35px_rgba(255,255,255,0.3)]">
@@ -693,265 +722,387 @@ export default function Home() {
       )}
 
       {/* LAYER 3: MAIN APP INTERFACE */}
-      <main className={`relative z-20 h-full w-full flex flex-col justify-between p-3 sm:p-6 transition-opacity duration-1000 ${isEntered ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
-        {/* RESPONSIVE HEADER BAR */}
-        <header className="w-full flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 pointer-events-auto relative z-30">
-          <div className="flex items-center gap-2 sm:gap-3 max-w-full">
-            <span className="font-mono text-lg sm:text-xl font-bold text-white tracking-wider shrink-0">3:17 AM</span>
-
-            <div className="relative min-w-0">
-              <button
-                onClick={() => setIsRoomDropdownOpen(!isRoomDropdownOpen)}
-                className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-amber-400/40 text-xs font-mono text-amber-200 transition shadow-lg max-w-full"
-              >
-                <Sun className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-                <span className="truncate max-w-[150px] sm:max-w-none">{headerTitle}</span>
-                <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
-              </button>
-
-              {isRoomDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-64 rounded-2xl bg-[#0a0d18]/95 border border-amber-500/30 backdrop-blur-xl p-2 shadow-2xl z-50 space-y-1">
-                  {Object.entries(rooms).map(([key, rm]) => (
-                    <button
-                      key={key}
-                      onClick={() => {
-                        setCurrentRoomKey(key);
-                        setIsRoomDropdownOpen(false);
-                      }}
-                      className="cursor-pointer w-full p-2 rounded-xl hover:bg-amber-500/20 text-left text-xs font-mono flex items-center justify-between text-slate-200 hover:text-white"
-                    >
-                      <span>{rm.name}</span>
-                      <span className="text-[10px] text-amber-300">{rm.listeners} live</span>
-                    </button>
-                  ))}
-
-                  <div className="border-t border-white/10 pt-1">
-                    <button
-                      onClick={() => {
-                        setIsRoomDropdownOpen(false);
-                        setIsCustomRoomModalOpen(true);
-                      }}
-                      className="cursor-pointer w-full p-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-left text-xs font-mono flex items-center justify-between text-amber-200"
-                    >
-                      <span className="flex items-center gap-1.5"><Plus className="w-3.5 h-3.5" /> Create Custom Room...</span>
-                      <span className="text-[10px] text-amber-400">new</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Center Listener Count */}
-          <div className="hidden lg:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-xs font-mono text-slate-300">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
-            </span>
-            <span className="font-semibold text-emerald-300">{currentRoom.listeners}</span>
-            <span className="text-slate-400">listening right now</span>
-          </div>
-
-          {/* Right Action Controls */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+      <main className={`relative z-20 h-full w-full flex flex-col justify-between p-3 sm:p-6 pt-safe pb-safe transition-opacity duration-1000 ${isEntered ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
+        
+        {/* ==================================================
+            1. MINIMAL TOP BAR (ENVIRONMENT FIRST 70/20/10 RULE)
+           ================================================== */}
+        <header className="w-full flex items-center justify-between pointer-events-auto relative z-30 pt-1 px-1">
+          {/* Top Left: Branding & Compact Mood Selector Trigger */}
+          <div className="flex items-center gap-2.5">
+            <span className="font-mono text-lg sm:text-xl font-bold text-white tracking-wider">3:17 AM</span>
+            
             <button
-              onClick={() => setIsSuggestSongModalOpen(true)}
-              className="cursor-pointer inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-[11px] sm:text-xs font-mono text-amber-200 transition active:scale-95 shadow-md"
+              onClick={() => setIsMoodSheetOpen(true)}
+              className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 border border-amber-400/30 backdrop-blur-md text-[11px] sm:text-xs font-mono text-amber-200 transition shadow-md active:scale-95"
             >
-              <Music className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-300" />
-              <span className="hidden xs:inline">Suggest Song 🎵</span>
-              <span className="xs:hidden">Suggest</span>
+              <Moon className="w-3 h-3 text-amber-300" />
+              <span>☾ {currentRoom.label}</span>
+              <ChevronDown className="w-3 h-3 text-slate-400" />
+            </button>
+          </div>
+
+          {/* Top Right: Tiny Listener Count Trigger (No heavy cards) */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsCommunitySheetOpen(true)}
+              className="cursor-pointer inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 border border-emerald-400/30 backdrop-blur-md text-xs font-mono text-slate-200 transition shadow-md active:scale-95"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+              </span>
+              <span className="font-semibold text-emerald-300">{currentRoom.listeners}</span>
             </button>
 
             <button
               onClick={() => toggleRainAudio()}
-              className="cursor-pointer inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/40 text-[11px] sm:text-xs font-mono text-sky-200 transition active:scale-95 shadow-md"
+              title="Toggle Rain Audio"
+              className="cursor-pointer p-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 text-slate-300 hover:text-white transition active:scale-95"
             >
-              {isRainAudioMuted ? <VolumeX className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-sky-300" /> : <Volume2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-sky-300" />}
-              <span className="hidden xs:inline">{isRainAudioMuted ? "Rain Sound OFF" : "Rain Sound ON"}</span>
-              <span className="xs:hidden">{isRainAudioMuted ? "OFF" : "ON"}</span>
-            </button>
-
-            <button
-              onClick={() => setIsRightDrawerOpen(true)}
-              className="cursor-pointer inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-[11px] sm:text-xs font-mono text-purple-200 transition active:scale-95 shadow-md"
-            >
-              <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-purple-300" />
-              <span className="hidden sm:inline">Live Chat & Owls</span>
-              <span className="sm:hidden">Chat</span>
-            </button>
-
-            <button
-              onClick={() => setIsMixerModalOpen(true)}
-              title="Ambient Sounds"
-              className="cursor-pointer p-1.5 sm:p-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 text-slate-300 hover:text-white transition active:scale-95"
-            >
-              <Sliders className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              {isRainAudioMuted ? <VolumeX className="w-3.5 h-3.5 text-sky-400" /> : <Volume2 className="w-3.5 h-3.5 text-sky-300" />}
             </button>
           </div>
         </header>
 
-        {/* OPTIMIZED MOBILE HOTSPOTS CONTAINER */}
+        {/* ==================================================
+            2. HOTSPOTS CONTAINER (SELECTIVE 3-4 ON MOBILE)
+           ================================================== */}
         <div className="absolute inset-0 z-20 pointer-events-auto flex items-center justify-center">
+          {/* WINDOW (Mobile + Desktop) */}
           <button onClick={() => handleHotspotClick("window")} className="hotspot absolute left-[10%] top-[22%] sm:left-[20%] sm:top-[22%]" title="Window">
             <div className="spot-pulse" />
             <div className="spot-card">
-              <CloudRain className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-sky-300" />
-              <span>window</span>
+              <CloudRain className="w-3 h-3 text-sky-300" />
+              <span className="hidden sm:inline">window</span>
             </div>
           </button>
 
-          <button onClick={() => handleHotspotClick("laptop")} className="hotspot absolute left-[40%] top-[50%] sm:left-[48%] sm:top-[52%]" title="Laptop">
+          {/* LAPTOP (Mobile + Desktop) */}
+          <button onClick={() => handleHotspotClick("laptop")} className="hotspot absolute left-[42%] top-[48%] sm:left-[48%] sm:top-[52%]" title="Laptop">
             <div className="spot-pulse" />
             <div className="spot-card animate-flicker">
-              <Laptop className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-purple-300" />
-              <span>laptop</span>
+              <Laptop className="w-3 h-3 text-purple-300" />
+              <span className="hidden sm:inline">laptop</span>
             </div>
           </button>
 
-          <button onClick={() => handleHotspotClick("phone")} className="hotspot absolute right-[15%] top-[62%] sm:right-[30%] sm:top-[60%]" title="Phone">
+          {/* MUG (Mobile + Desktop) */}
+          <button onClick={() => handleHotspotClick("mug")} className="hotspot absolute left-[26%] top-[60%] sm:left-[38%] sm:top-[58%]" title="Coffee Mug">
             <div className="spot-pulse" />
             <div className="spot-card">
-              <Smartphone className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-300" />
+              <Coffee className="w-3 h-3 text-amber-400" />
+              <span className="hidden sm:inline">mug</span>
+            </div>
+          </button>
+
+          {/* CAT (Mobile + Desktop) */}
+          <button onClick={() => handleHotspotClick("cat")} className="hotspot absolute right-[12%] bottom-[28%] sm:right-[22%] sm:bottom-[30%]" title="Sleeping Cat">
+            <div className="spot-pulse" />
+            <div className="spot-card">
+              <Cat className="w-3 h-3 text-orange-300" />
+              <span className="hidden sm:inline">cat</span>
+            </div>
+          </button>
+
+          {/* PHONE (Desktop Only) */}
+          <button onClick={() => handleHotspotClick("phone")} className="hotspot hidden sm:flex absolute right-[30%] top-[60%]" title="Phone">
+            <div className="spot-pulse" />
+            <div className="spot-card">
+              <Smartphone className="w-3.5 h-3.5 text-emerald-300" />
               <span>phone</span>
             </div>
           </button>
 
-          <button onClick={() => handleHotspotClick("clock")} className="hotspot absolute right-[10%] top-[22%] sm:right-[22%] sm:top-[25%]" title="Real-Time Clock">
+          {/* CLOCK (Desktop Only) */}
+          <button onClick={() => handleHotspotClick("clock")} className="hotspot hidden sm:flex absolute right-[22%] top-[25%]" title="Real-Time Clock">
             <div className="spot-pulse" />
             <div className="spot-card border-amber-400/40">
-              <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-300" />
+              <Clock className="w-3.5 h-3.5 text-amber-300" />
               <span className="font-mono font-bold text-amber-200">{realtimeClock}</span>
             </div>
           </button>
 
-          <button onClick={() => handleHotspotClick("mug")} className="hotspot absolute left-[25%] top-[60%] sm:left-[38%] sm:top-[58%]" title="Coffee Mug">
+          {/* BED (Desktop Only) */}
+          <button onClick={() => handleHotspotClick("bed")} className="hotspot hidden sm:flex absolute left-[15%] bottom-[18%]" title="Bed">
             <div className="spot-pulse" />
             <div className="spot-card">
-              <Coffee className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400" />
-              <span>mug</span>
-            </div>
-          </button>
-
-          <button onClick={() => handleHotspotClick("bed")} className="hotspot absolute left-[8%] bottom-[20%] sm:left-[15%] sm:bottom-[18%]" title="Bed">
-            <div className="spot-pulse" />
-            <div className="spot-card">
-              <Bed className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-indigo-300" />
+              <Bed className="w-3.5 h-3.5 text-indigo-300" />
               <span>bed</span>
-            </div>
-          </button>
-
-          <button onClick={() => handleHotspotClick("cat")} className="hotspot absolute right-[10%] bottom-[26%] sm:right-[22%] sm:bottom-[30%]" title="Sleeping Cat">
-            <div className="spot-pulse" />
-            <div className="spot-card">
-              <Cat className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-orange-300" />
-              <span>cat</span>
             </div>
           </button>
         </div>
 
         {/* DIALOGUE TOAST */}
         {dialogue && (
-          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 max-w-sm w-full px-4 pointer-events-none transition-all">
-            <div className="glass-pill px-6 py-4 rounded-2xl border border-white/20 shadow-2xl text-center backdrop-blur-2xl bg-[#05070d]/90 space-y-1">
-              <div className="font-sans text-sm sm:text-base font-medium text-slate-100">{dialogue.text}</div>
-              <div className="font-mono text-xs text-slate-400">{dialogue.sub}</div>
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 max-w-xs sm:max-w-sm w-full px-4 pointer-events-none transition-all">
+            <div className="glass-pill px-5 py-3.5 rounded-2xl border border-white/20 shadow-2xl text-center backdrop-blur-2xl bg-[#05070d]/90 space-y-1">
+              <div className="font-sans text-xs sm:text-sm font-medium text-slate-100">{dialogue.text}</div>
+              <div className="font-mono text-[11px] text-slate-400">{dialogue.sub}</div>
             </div>
           </div>
         )}
 
-        {/* CLICKABLE LISTENING AVATARS BAR */}
-        <button
-          onClick={() => setIsRightDrawerOpen(true)}
-          className="fixed top-[12%] sm:top-[15%] left-1/2 -translate-x-1/2 z-30 pointer-events-auto cursor-pointer flex items-center gap-2.5 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#05070d]/80 border border-amber-500/30 hover:border-amber-400/60 backdrop-blur-xl shadow-2xl transition hover:scale-105 active:scale-95 max-w-[90vw]"
-        >
-          <div className="flex -space-x-2 shrink-0">
-            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-amber-500 border border-white flex items-center justify-center text-[9px] sm:text-[10px] font-bold text-white">A</div>
-            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-indigo-500 border border-white flex items-center justify-center text-[9px] sm:text-[10px] font-bold text-white">R</div>
-            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-emerald-500 border border-white flex items-center justify-center text-[9px] sm:text-[10px] font-bold text-white">S</div>
-            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-purple-500 border border-white flex items-center justify-center text-[9px] sm:text-[10px] font-bold text-white">M</div>
-          </div>
-          <span className="text-[11px] sm:text-xs font-mono text-slate-300 truncate">you're not listening alone. <span className="text-amber-300 underline font-semibold">(view owls)</span></span>
-        </button>
-
         {/* GENZ FLOATING PRESENCE TOAST */}
         {presenceToast && (
-          <div className="fixed bottom-[28%] left-1/2 -translate-x-1/2 z-30 pointer-events-none transition-all duration-500 max-w-[90vw]">
-            <div className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-indigo-500/20 border border-indigo-500/40 backdrop-blur-xl text-[11px] sm:text-xs font-mono text-indigo-200 shadow-2xl flex items-center gap-2 truncate">
+          <div className="fixed bottom-[26%] left-1/2 -translate-x-1/2 z-30 pointer-events-none transition-all duration-500 max-w-[90vw]">
+            <div className="px-3.5 py-1.5 rounded-full bg-indigo-500/20 border border-indigo-500/40 backdrop-blur-xl text-xs font-mono text-indigo-200 shadow-2xl flex items-center gap-2 truncate">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
               <span className="truncate">{presenceToast}</span>
             </div>
           </div>
         )}
 
-        {/* FOOTER & PLAYER CARD */}
-        <footer className="w-full flex flex-col md:flex-row items-end md:items-center justify-between gap-3 pointer-events-auto z-30 relative">
-          <div className="flex flex-wrap items-center gap-2 order-2 md:order-1">
+        {/* CINEMATIC RISING NOTE PARTICLE */}
+        {risingParticleNote && (
+          <div className="sky-thought-particle animate-note-rise left-1/2 bottom-20 z-40">
+            {risingParticleNote}
+          </div>
+        )}
+
+        {/* ==================================================
+            3. MINIMAL FLOATING MOBILE DOCK & COMPACT PLAYER
+           ================================================== */}
+        <footer className="w-full flex flex-col items-center justify-end gap-3 pointer-events-auto z-30 relative pb-1">
+          
+          {/* COLLAPSED MINI-PLAYER BAR */}
+          <div className="w-full max-w-sm bg-[#0a0d18]/85 border border-amber-500/30 rounded-full p-2 pl-3.5 pr-2 backdrop-blur-xl shadow-2xl flex items-center justify-between gap-3">
             <button
-              onClick={() => setIsLightsModalOpen(true)}
-              className="cursor-pointer inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-slate-900/90 hover:bg-slate-900 border border-amber-500/30 text-[11px] sm:text-xs font-mono text-slate-200 shadow-xl transition active:scale-95"
+              onClick={() => setIsRadioSheetOpen(true)}
+              className="cursor-pointer flex items-center gap-2.5 min-w-0 text-left flex-1"
             >
-              <span className="text-amber-400 font-bold">⚡ POWER</span>
-              <span className="text-amber-300 hidden xs:inline">{"█".repeat(Math.round((powerLevel / 100) * 10)) + "░".repeat(10 - Math.round((powerLevel / 100) * 10))}</span>
-              <span className="font-bold text-white">{powerLevel}%</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-white truncate">{currentRoom.trackTitle}</div>
+                <div className="text-[10px] font-mono text-slate-400 truncate">{currentRoom.trackArtist}</div>
+              </div>
+            </button>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                onClick={() => toggleRadioPlayback()}
+                className="cursor-pointer p-2 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow-md transition active:scale-95"
+              >
+                {isRadioPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+              </button>
+
+              <button
+                onClick={() => setIsRadioSheetOpen(true)}
+                className="cursor-pointer p-2 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 transition"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* FLOATING ACTION DOCK */}
+          <div className="flex items-center gap-2 bg-[#05070d]/80 border border-white/15 p-1.5 px-3 rounded-full backdrop-blur-2xl shadow-2xl">
+            <button
+              onClick={() => setIsRadioSheetOpen(true)}
+              className="cursor-pointer px-3.5 py-1.5 rounded-full bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-xs font-mono text-amber-200 transition active:scale-95 flex items-center gap-1.5"
+            >
+              <Music className="w-3.5 h-3.5 text-amber-300" />
+              <span>RADIO</span>
             </button>
 
             <button
               onClick={() => setIsThoughtModalOpen(true)}
-              className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-gradient-to-r from-purple-500/20 to-indigo-500/20 hover:from-purple-500/30 hover:to-indigo-500/30 border border-purple-500/30 text-[11px] sm:text-xs font-sans text-slate-200 transition active:scale-95 shadow-lg"
+              className="cursor-pointer px-3.5 py-1.5 rounded-full bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-xs font-mono text-purple-200 transition active:scale-95 flex items-center gap-1.5"
             >
               <Feather className="w-3.5 h-3.5 text-purple-300" />
-              <span>leave a note ✨</span>
+              <span>NOTE</span>
+            </button>
+
+            <button
+              onClick={() => setIsLightsModalOpen(true)}
+              className="cursor-pointer px-3.5 py-1.5 rounded-full bg-slate-800/90 hover:bg-slate-800 border border-amber-500/30 text-xs font-mono text-slate-200 transition active:scale-95 flex items-center gap-1.5"
+            >
+              <Zap className="w-3.5 h-3.5 text-amber-400" />
+              <span className="font-bold">{powerLevel}%</span>
             </button>
           </div>
-
-          {/* MUSIC PLAYER CARD */}
-          {isPlayerCardVisible && (
-            <div className="w-full md:w-auto min-w-[280px] max-w-sm order-1 md:order-2 bg-slate-900/90 border border-amber-500/30 rounded-3xl p-3 sm:p-3.5 backdrop-blur-2xl shadow-2xl space-y-2.5 sm:space-y-3 relative">
-              <button
-                onClick={() => {
-                  setIsPlayerCardVisible(false);
-                  toggleRadioPlayback(false);
-                }}
-                title="Close Music Player"
-                className="cursor-pointer absolute top-2.5 right-2.5 p-1 text-slate-400 hover:text-white transition"
-              >
-                <X className="w-4 h-4" />
-              </button>
-
-              <div className="flex items-center justify-between pr-6">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="font-mono text-xs font-bold text-white tracking-wide">🌙 {realtimeClock} RADIO</span>
-                </div>
-                <span className="text-[10px] font-mono text-amber-300">{currentRoom.listeners} listening</span>
-              </div>
-
-              <div className="flex items-center justify-between gap-3 p-2 sm:p-2.5 rounded-2xl bg-white/5 border border-white/10">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-amber-500/20 border border-amber-400/40 flex items-center justify-center shrink-0 overflow-hidden shadow-lg">
-                    <Disc className={`w-4 h-4 sm:w-5 sm:h-5 text-amber-300 ${isRadioPlaying ? "animate-spin-slow" : ""}`} />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-white truncate max-w-[130px] sm:max-w-[140px]">{currentRoom.trackTitle}</div>
-                    <div className="text-[10px] font-mono text-slate-400 truncate">{currentRoom.trackArtist}</div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button onClick={() => toggleRadioPlayback(!isRadioPlaying)} className="cursor-pointer p-2 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow-lg transition active:scale-95">
-                    {isRadioPlaying ? <Pause className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" /> : <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </footer>
       </main>
 
+      {/* ==================================================
+          4. MOOD SELECTOR BOTTOM SHEET
+         ================================================== */}
+      {isMoodSheetOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md p-0 sm:p-4">
+          <div className="w-full max-w-md bg-[#0a0d18] border-t sm:border border-amber-500/30 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl space-y-5 animate-sheet-up relative">
+            <button onClick={() => setIsMoodSheetOpen(false)} className="cursor-pointer absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-mono">
+                <Moon className="w-3.5 h-3.5" />
+                <span>atmosphere selection</span>
+              </div>
+              <h3 className="font-mono text-lg font-bold text-white">what are we doing tonight?</h3>
+              <p className="text-xs text-slate-400">select a room environment & soundscape.</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {Object.entries(rooms).map(([key, rm]) => (
+                <button
+                  key={key}
+                  onClick={() => {
+                    setCurrentRoomKey(key);
+                    setIsMoodSheetOpen(false);
+                  }}
+                  className={`cursor-pointer p-3.5 rounded-2xl border text-left transition flex items-center justify-between ${currentRoomKey === key ? "bg-amber-500/20 border-amber-400/60 text-white" : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"}`}
+                >
+                  <div>
+                    <div className="text-xs font-mono font-bold capitalize">{rm.label}</div>
+                    <div className="text-[10px] text-slate-400">{rm.trackTitle}</div>
+                  </div>
+                  <span className="text-[10px] font-mono text-amber-300">{rm.listeners} live</span>
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => {
+                setIsMoodSheetOpen(false);
+                setIsCustomRoomModalOpen(true);
+              }}
+              className="cursor-pointer w-full py-3 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-xs font-mono text-amber-200 hover:bg-amber-500/30 flex items-center justify-center gap-2"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Create Custom Room...</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ==================================================
+          5. COMMUNITY / LISTENERS BOTTOM SHEET
+         ================================================== */}
+      {isCommunitySheetOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md p-0 sm:p-4">
+          <div className="w-full max-w-md bg-[#0a0d18] border-t sm:border border-emerald-500/30 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl space-y-5 animate-sheet-up relative">
+            <button onClick={() => setIsCommunitySheetOpen(false)} className="cursor-pointer absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-1">
+              <h3 className="font-mono text-lg font-bold text-white">you're not listening alone.</h3>
+              <p className="text-xs font-mono text-emerald-300">{currentRoom.listeners} people are here right now.</p>
+            </div>
+
+            <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+              {owlsList.map((owl, idx) => (
+                <div key={idx} className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full ${owl.bg} flex items-center justify-center font-bold text-xs text-white`}>
+                      {owl.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-white">🟢 {owl.name} · {owl.city}</div>
+                      <div className="text-[10px] font-mono text-slate-400">listening to {currentRoom.trackTitle}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => {
+                setIsCommunitySheetOpen(false);
+                setIsRightDrawerOpen(true);
+              }}
+              className="cursor-pointer w-full py-3 rounded-full bg-emerald-500 hover:bg-emerald-400 text-xs font-mono text-slate-950 font-bold transition active:scale-95 flex items-center justify-center gap-2"
+            >
+              <span>enter listening room →</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ==================================================
+          6. EXPANDED RADIO PLAYER BOTTOM SHEET
+         ================================================== */}
+      {isRadioSheetOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-xl p-0 sm:p-4">
+          <div className="w-full max-w-sm bg-[#0a0d18] border-t sm:border border-amber-500/40 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl space-y-5 animate-sheet-up relative">
+            <button onClick={() => setIsRadioSheetOpen(false)} className="cursor-pointer absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="text-center space-y-1">
+              <div className="text-[11px] font-mono text-amber-300 font-bold tracking-wider">3:17 AM RADIO</div>
+              <h3 className="font-mono text-base font-bold text-white">{currentRoom.trackTitle}</h3>
+              <p className="text-xs text-slate-400">{currentRoom.trackArtist}</p>
+            </div>
+
+            {/* ALBUM ART DISC */}
+            <div className="flex justify-center py-2">
+              <div className="relative w-28 h-28 rounded-full bg-amber-500/20 border-2 border-amber-400/40 flex items-center justify-center shadow-[0_0_30px_rgba(245,158,11,0.25)]">
+                <Disc className={`w-14 h-14 text-amber-300 ${isRadioPlaying ? "animate-spin-slow" : ""}`} />
+              </div>
+            </div>
+
+            {/* AUDIO PROGRESS SCRUBBER */}
+            <div className="space-y-1">
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={audioProgress}
+                onChange={(e) => setAudioProgress(Number(e.target.value))}
+                className="range-slider cursor-pointer"
+              />
+              <div className="flex justify-between text-[10px] font-mono text-slate-500">
+                <span>01:12</span>
+                <span>03:45</span>
+              </div>
+            </div>
+
+            {/* PLAYER CONTROLS */}
+            <div className="flex items-center justify-center gap-6">
+              <button onClick={() => showToast("Previous track")} className="cursor-pointer p-2 text-slate-400 hover:text-white transition">
+                <SkipBack className="w-5 h-5" />
+              </button>
+
+              <button
+                onClick={() => toggleRadioPlayback()}
+                className="cursor-pointer p-3.5 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow-xl transition active:scale-95"
+              >
+                {isRadioPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
+              </button>
+
+              <button onClick={() => showToast("Next track")} className="cursor-pointer p-2 text-slate-400 hover:text-white transition">
+                <SkipForward className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="pt-2 flex items-center justify-between border-t border-white/10">
+              <button
+                onClick={() => toggleTrackLike(currentRoom.trackTitle)}
+                className="cursor-pointer inline-flex items-center gap-1.5 text-xs font-mono text-amber-300 hover:text-amber-200"
+              >
+                <Heart className={`w-4 h-4 ${likedTracks.includes(currentRoom.trackTitle) ? "fill-amber-400 text-amber-400" : ""}`} />
+                <span>{likedTracks.includes(currentRoom.trackTitle) ? "in my night" : "add to my night"}</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsRadioSheetOpen(false);
+                  setIsSuggestSongModalOpen(true);
+                }}
+                className="cursor-pointer text-xs font-mono text-slate-400 hover:text-white underline"
+              >
+                Suggest Song 🎵
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* RIGHT SLIDE DRAWER WITH CHAT / OWLS / SUGGESTIONS */}
       <div className={`fixed inset-y-0 right-0 z-50 w-full sm:max-w-md bg-[#0a0d18]/95 border-l border-amber-500/30 backdrop-blur-2xl shadow-2xl p-4 sm:p-6 flex flex-col justify-between transform transition-transform duration-300 ease-in-out ${isRightDrawerOpen ? "translate-x-0" : "translate-x-full"}`}>
-        <div className="flex flex-col h-full overflow-hidden">
+        <div className="flex flex-col h-full overflow-hidden pt-safe pb-safe">
           <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4 shrink-0">
             <div className="flex items-center gap-2">
               <Headphones className="w-5 h-5 text-amber-400" />
@@ -1092,8 +1243,8 @@ export default function Home() {
 
       {/* MODAL: SUGGEST A SONG */}
       {isSuggestSongModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#05070d]/90 backdrop-blur-xl p-4">
-          <div className="w-full max-w-sm rounded-3xl bg-gradient-to-b from-slate-900/95 to-[#0a0d18] border border-amber-500/40 p-6 shadow-2xl space-y-4 relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xl p-4">
+          <div className="w-full max-w-sm rounded-3xl bg-[#0a0d18] border border-amber-500/40 p-6 shadow-2xl space-y-4 relative">
             <button onClick={() => setIsSuggestSongModalOpen(false)} className="cursor-pointer absolute top-4 right-4 text-slate-400 hover:text-white p-1">
               <X className="w-5 h-5" />
             </button>
@@ -1160,8 +1311,8 @@ export default function Home() {
 
       {/* MODAL: CUSTOM ROOM */}
       {isCustomRoomModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#05070d]/90 backdrop-blur-xl p-4">
-          <div className="w-full max-w-sm rounded-3xl bg-gradient-to-b from-slate-900/95 to-[#0a0d18] border border-amber-500/40 p-6 shadow-2xl space-y-4 relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xl p-4">
+          <div className="w-full max-w-sm rounded-3xl bg-[#0a0d18] border border-amber-500/40 p-6 shadow-2xl space-y-4 relative">
             <button onClick={() => setIsCustomRoomModalOpen(false)} className="cursor-pointer absolute top-4 right-4 text-slate-400 hover:text-white p-1">
               <X className="w-5 h-5" />
             </button>
@@ -1197,10 +1348,9 @@ export default function Home() {
                 const key = "custom_" + Date.now();
                 const newRm = {
                   name: (customRoomTitle.trim() || "✨ Custom Night Room").toUpperCase(),
-                  label: `✨ ${customRoomTitle || "Custom Room"}`,
+                  label: customRoomTitle || "Custom Room",
                   listeners: "1",
                   imgIdx: Math.floor(Math.random() * roomImages.length),
-                  hasCRT: false,
                   trackTitle: customTrackName.trim() || "Midnight Synthwave",
                   trackArtist: "Night Owl Creator"
                 };
@@ -1218,18 +1368,18 @@ export default function Home() {
 
       {/* MODAL: LEAVE A NOTE */}
       {isThoughtModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#05070d]/85 backdrop-blur-xl p-4">
-          <div className="w-full max-w-sm rounded-3xl bg-gradient-to-b from-slate-900/90 to-[#0a0d18] border border-amber-500/30 p-6 shadow-2xl space-y-4 relative">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-xl p-0 sm:p-4">
+          <div className="w-full max-w-sm rounded-t-3xl sm:rounded-3xl bg-[#0a0d18] border-t sm:border border-purple-500/30 p-6 shadow-2xl space-y-4 animate-sheet-up relative">
             <button onClick={() => setIsThoughtModalOpen(false)} className="cursor-pointer absolute top-4 right-4 text-slate-400 hover:text-white p-1">
               <X className="w-5 h-5" />
             </button>
 
             <div className="space-y-1">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-mono">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs font-mono">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>dispatched via Groq night stream</span>
+                <span>leave something here</span>
               </div>
-              <h3 className="font-mono text-lg font-bold text-white tracking-wide">what's on your mind?</h3>
+              <h3 className="font-mono text-lg font-bold text-white tracking-wide">something you probably won't say out loud...</h3>
               <p className="text-xs text-slate-400 font-sans">don't worry. nobody knows it's you. 🌙</p>
             </div>
 
@@ -1238,21 +1388,16 @@ export default function Home() {
               value={thoughtText}
               onChange={(e) => setThoughtText(e.target.value)}
               placeholder="I hope tomorrow is better..."
-              className="w-full p-3.5 rounded-2xl bg-white/5 border border-amber-500/20 text-sm text-slate-100 font-sans resize-none"
+              className="w-full p-3.5 rounded-2xl bg-white/5 border border-purple-500/20 text-sm text-slate-100 font-sans resize-none"
             />
 
             <div className="flex items-center justify-between pt-1">
-              <span className="text-[11px] font-mono text-amber-300/70">100% anonymous & encrypted</span>
+              <span className="text-[11px] font-mono text-purple-300/70">100% anonymous & encrypted</span>
               <button
-                onClick={() => {
-                  if (!thoughtText.trim()) return;
-                  setIsThoughtModalOpen(false);
-                  setThoughtText("");
-                  showToast("note left for night owls ✨");
-                }}
-                className="cursor-pointer px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-xs font-mono text-slate-950 font-bold transition active:scale-95 shadow-lg flex items-center gap-1.5"
+                onClick={handleReleaseNote}
+                className="cursor-pointer px-5 py-2.5 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 text-xs font-mono text-white font-bold transition active:scale-95 shadow-lg flex items-center gap-1.5"
               >
-                <span>leave it →</span>
+                <span>release into the night ✨</span>
               </button>
             </div>
           </div>
@@ -1261,8 +1406,8 @@ export default function Home() {
 
       {/* MODAL: POWER STATION */}
       {isLightsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#05070d]/85 backdrop-blur-xl p-4">
-          <div className="w-full max-w-sm rounded-3xl bg-gradient-to-b from-slate-900/90 to-[#0a0d18] border border-amber-500/30 p-6 shadow-2xl space-y-5 relative">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-xl p-0 sm:p-4">
+          <div className="w-full max-w-sm rounded-t-3xl sm:rounded-3xl bg-[#0a0d18] border-t sm:border border-amber-500/30 p-6 shadow-2xl space-y-5 animate-sheet-up relative">
             <button onClick={() => setIsLightsModalOpen(false)} className="cursor-pointer absolute top-4 right-4 text-slate-400 hover:text-white p-1">
               <X className="w-5 h-5" />
             </button>
@@ -1270,10 +1415,17 @@ export default function Home() {
             <div className="space-y-1">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-mono">
                 <Zap className="w-3.5 h-3.5" />
-                <span>night power grid status</span>
+                <span>NIGHT POWER GRID</span>
               </div>
-              <h3 className="font-mono text-lg font-bold text-white">welp. someone forgot to pay the electricity bill.</h3>
-              <p className="text-xs text-slate-400">keep the generator alive so the night owls can stay awake. 🕯️</p>
+              <h3 className="font-mono text-lg font-bold text-white">the room is slowly getting darker.</h3>
+              <p className="text-xs text-slate-400">power level: {powerLevel}%</p>
+            </div>
+
+            <div className="w-full bg-white/5 rounded-full h-3 p-0.5 border border-white/10 overflow-hidden">
+              <div
+                className="bg-amber-400 h-full rounded-full transition-all duration-500"
+                style={{ width: `${powerLevel}%` }}
+              />
             </div>
 
             <div className="space-y-2.5">
@@ -1309,65 +1461,6 @@ export default function Home() {
           <div className="relative z-10 space-y-1 max-w-sm">
             <h2 className="font-mono text-xl sm:text-2xl font-bold text-white drop-shadow-md">💥 BOOM! GENERATOR FIRED UP ⚡</h2>
             <p className="font-mono text-xs text-amber-300/80">heavy smoke rising... power grid engaging!</p>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: AMBIENT SOUND MIXER */}
-      {isMixerModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#05070d]/85 backdrop-blur-md p-4">
-          <div className="w-full max-w-sm rounded-3xl bg-[#0a0d18] border border-white/15 p-6 shadow-2xl space-y-5 relative">
-            <button onClick={() => setIsMixerModalOpen(false)} className="cursor-pointer absolute top-4 right-4 text-slate-400 hover:text-white p-1">
-              <X className="w-5 h-5" />
-            </button>
-            <div className="space-y-1">
-              <h3 className="font-mono text-base font-bold text-white">ambient sound mixer</h3>
-              <p className="text-xs text-slate-400">blend or toggle the environment soundscapes.</p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-sky-500/30">
-                <span className="text-xs font-mono text-sky-200 font-semibold flex items-center gap-2">
-                  <Volume2 className="w-4 h-4 text-sky-400" /> Master Rain Sound
-                </span>
-                <button
-                  onClick={() => toggleRainAudio()}
-                  className="cursor-pointer px-3 py-1 rounded-full bg-sky-500/20 border border-sky-500/40 text-xs font-mono text-sky-300 hover:bg-sky-500/30"
-                >
-                  {isRainAudioMuted ? "OFF" : "ON"}
-                </button>
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-xs font-mono text-slate-300">
-                  <span className="flex items-center gap-1.5"><CloudRain className="w-3.5 h-3.5 text-sky-400" /> rain volume</span>
-                  <span>{rainVolumePct}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={rainVolumePct}
-                  onChange={(e) => setRainVolumePct(Number(e.target.value))}
-                  className="range-slider cursor-pointer"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-xs font-mono text-slate-300">
-                  <span className="flex items-center gap-1.5"><Wind className="w-3.5 h-3.5 text-indigo-400" /> room rumble</span>
-                  <span>{fanVolumePct}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={fanVolumePct}
-                  onChange={(e) => setFanVolumePct(Number(e.target.value))}
-                  className="range-slider cursor-pointer"
-                />
-              </div>
-            </div>
           </div>
         </div>
       )}
