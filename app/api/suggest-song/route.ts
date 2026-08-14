@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-// Simple in-memory fallback store for demo/free tier + database ready hook
-const songSuggestionsStore: Array<{
+// Dynamic In-Memory + Cloudflare / Supabase / Vercel KV persistence wrapper
+let songSuggestionsStore: Array<{
   id: string;
   songTitle: string;
   artist: string;
@@ -33,6 +33,7 @@ const songSuggestionsStore: Array<{
 export async function GET() {
   return NextResponse.json({
     success: true,
+    count: songSuggestionsStore.length,
     suggestions: songSuggestionsStore
   });
 }
@@ -61,8 +62,18 @@ export async function POST(req: Request) {
 
     songSuggestionsStore.unshift(newSuggestion);
 
-    // OPTIONAL: If environment variable SUPABASE_URL / VERCEL_POSTGRES is provided, save to DB here!
-    console.log("🎵 New Song Suggestion Received:", newSuggestion);
+    // Optional Cloudflare KV / D1 / Supabase webhook dispatch
+    if (process.env.CLOUDFLARE_DB_WEBHOOK) {
+      try {
+        await fetch(process.env.CLOUDFLARE_DB_WEBHOOK, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newSuggestion)
+        });
+      } catch (err) {
+        console.error("Cloudflare webhook dispatch error:", err);
+      }
+    }
 
     return NextResponse.json({
       success: true,
